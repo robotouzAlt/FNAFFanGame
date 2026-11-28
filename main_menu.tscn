@@ -42,17 +42,35 @@ text = "MENU_READY"
 [node name="Buttons" type="HBoxContainer" parent="MenuPage/VBox" unique_id=1751495261]
 layout_mode = 2
 
-[node name="SettingsButton" type="Button" parent="MenuPage/VBox" unique_id=1902407716]
-layout_mode = 2
-text = "settings"
-
 [node name="BtnNo" type="Button" parent="MenuPage/VBox/Buttons" unique_id=1345999077]
 layout_mode = 2
 text = "MENU_NO"
 
-[node name="BtnYes" type="Button" parent="MenuPage/VBox/Buttons" unique_id=2001437657]
+[node name="YesColumn" type="VBoxContainer" parent="MenuPage/VBox/Buttons" unique_id=1000164149]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="BtnYes" type="Button" parent="MenuPage/VBox/Buttons/YesColumn" unique_id=2001437657]
 layout_mode = 2
 text = "MENU_YES"
+
+[node name="CustomNightButton" type="Button" parent="MenuPage/VBox/Buttons/YesColumn" unique_id=1449609881]
+visible = false
+layout_mode = 2
+text = "MENU_CUSTOM_NIGHT"
+
+[node name="SettingsButton" type="Button" parent="MenuPage/VBox" unique_id=1902407716]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="MenuPage/VBox/SettingsButton" unique_id=1108289097]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
 
 [node name="LoadingPage" type="CenterContainer" parent="." unique_id=1210781871]
 visible = false
@@ -95,7 +113,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 color = Color(0.13, 0.13, 0.13, 1)
 
 [node name="ContentCenter" type="CenterContainer" parent="SettingsPage" unique_id=749632810]
@@ -105,7 +122,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 1
 
 [node name="SettingsContent" type="VBoxContainer" parent="SettingsPage/ContentCenter" unique_id=487152925]
 layout_mode = 2
@@ -117,7 +133,7 @@ theme_override_constants/separation = 12
 
 [node name="QualityLabel" type="Label" parent="SettingsPage/ContentCenter/SettingsContent/QualityRow" unique_id=1211667584]
 layout_mode = 2
-text = "quality: "
+text = "QUALITY"
 
 [node name="QualityOption" type="OptionButton" parent="SettingsPage/ContentCenter/SettingsContent/QualityRow" unique_id=1560472831]
 custom_minimum_size = Vector2(220, 0)
@@ -129,19 +145,33 @@ theme_override_constants/separation = 12
 
 [node name="FpsLabel" type="Label" parent="SettingsPage/ContentCenter/SettingsContent/FpsRow" unique_id=468121561]
 layout_mode = 2
-text = "fps: "
+text = "FPS"
 
-[node name="FpsOption" type="OptionButton" parent="SettingsPage/ContentCenter/SettingsContent/FpsRow" unique_id=1942401298]
-custom_minimum_size = Vector2(220, 0)
+[node name="FpsSlider" type="HSlider" parent="SettingsPage/ContentCenter/SettingsContent/FpsRow" unique_id=1942401298]
+custom_minimum_size = Vector2(260, 32)
 layout_mode = 2
+size_flags_horizontal = 3
+max_value = 5.0
+tick_count = 6
+ticks_on_borders = true
+
+[node name="FpsValue" type="Label" parent="SettingsPage/ContentCenter/SettingsContent/FpsRow" unique_id=1306613793]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "vsync (default)"
+horizontal_alignment = 1
 
 [node name="MotionBlurCheck" type="CheckButton" parent="SettingsPage/ContentCenter/SettingsContent" unique_id=1981217032]
 layout_mode = 2
-text = "Motion blur"
+text = "MOTION_BLUR"
 
 [node name="ShadowsCheck" type="CheckButton" parent="SettingsPage/ContentCenter/SettingsContent" unique_id=1237342353]
 layout_mode = 2
-text = "Shadows"
+text = "SHADOWS"
+
+[node name="MobileCheck" type="CheckButton" parent="SettingsPage/ContentCenter/SettingsContent" unique_id=1237342354]
+layout_mode = 2
+text = "MOBILE"
 
 [node name="CloseSettingsButton" type="Button" parent="SettingsPage" unique_id=1636288443]
 layout_mode = 1
@@ -153,7 +183,167 @@ offset_top = 18.0
 offset_right = -18.0
 offset_bottom = 108.0
 grow_horizontal = 0
-text = "X"
+text = "CLOSE"
+
+[node name="CustomNightPage" type="ColorRect" parent="." unique_id=814887912]
+visible = false
+z_index = 11
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.03, 0.03, 1)
+
+[node name="Center" type="CenterContainer" parent="CustomNightPage" unique_id=367199902]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Portraits" type="HBoxContainer" parent="CustomNightPage/Center" unique_id=434884915]
+layout_mode = 2
+theme_override_constants/separation = 90
+alignment = 1
+
+[node name="OuzColumn" type="VBoxContainer" parent="CustomNightPage/Center/Portraits" unique_id=1463925263]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="OuzPortraitPanel" type="Panel" parent="CustomNightPage/Center/Portraits/OuzColumn" unique_id=1822786355]
+custom_minimum_size = Vector2(240, 320)
+layout_mode = 2
+
+[node name="OuzPortrait" type="TextureRect" parent="CustomNightPage/Center/Portraits/OuzColumn/OuzPortraitPanel" unique_id=1595027163]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="OuzLevel" type="Label" parent="CustomNightPage/Center/Portraits/OuzColumn/OuzPortraitPanel" unique_id=1219031263]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -84.0
+offset_top = -76.0
+offset_right = -10.0
+offset_bottom = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OuzArrows" type="HBoxContainer" parent="CustomNightPage/Center/Portraits/OuzColumn" unique_id=377897881]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="OuzIncrease" type="TextureButton" parent="CustomNightPage/Center/Portraits/OuzColumn/OuzArrows" unique_id=963259638]
+custom_minimum_size = Vector2(72, 64)
+layout_mode = 2
+
+[node name="OuzDecrease" type="TextureButton" parent="CustomNightPage/Center/Portraits/OuzColumn/OuzArrows" unique_id=392889934]
+custom_minimum_size = Vector2(72, 64)
+layout_mode = 2
+
+[node name="MelihColumn" type="VBoxContainer" parent="CustomNightPage/Center/Portraits" unique_id=1732976546]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="MelihPortraitPanel" type="Panel" parent="CustomNightPage/Center/Portraits/MelihColumn" unique_id=1658273757]
+custom_minimum_size = Vector2(240, 320)
+layout_mode = 2
+
+[node name="MelihPortrait" type="TextureRect" parent="CustomNightPage/Center/Portraits/MelihColumn/MelihPortraitPanel" unique_id=1033949661]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MelihLevel" type="Label" parent="CustomNightPage/Center/Portraits/MelihColumn/MelihPortraitPanel" unique_id=566935055]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -84.0
+offset_top = -76.0
+offset_right = -10.0
+offset_bottom = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MelihArrows" type="HBoxContainer" parent="CustomNightPage/Center/Portraits/MelihColumn" unique_id=1246932640]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="MelihIncrease" type="TextureButton" parent="CustomNightPage/Center/Portraits/MelihColumn/MelihArrows" unique_id=540981963]
+custom_minimum_size = Vector2(72, 64)
+layout_mode = 2
+
+[node name="MelihDecrease" type="TextureButton" parent="CustomNightPage/Center/Portraits/MelihColumn/MelihArrows" unique_id=348558257]
+custom_minimum_size = Vector2(72, 64)
+layout_mode = 2
+
+[node name="CloseCustomNightButton" type="Button" parent="CustomNightPage" unique_id=1557119219]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -108.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = 108.0
+grow_horizontal = 0
+text = "CLOSE"
+
+[node name="StartNightButton" type="Button" parent="CustomNightPage" unique_id=299611340]
+custom_minimum_size = Vector2(360, 72)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = -100.0
+offset_right = 180.0
+offset_bottom = -28.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "START_NIGHT"
 
 [node name="SFX" type="Node" parent="." unique_id=1483926711]
 

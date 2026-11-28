@@ -11,15 +11,17 @@ config_version=5
 [application]
 
 config/name="FiveNightsAtOkul"
-config/version="0.0.1-pre-alpha"
+config/version="0.1.8-alpha"
 run/main_scene="uid://be53ihdr00kpe"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+config/windows_native_icon="res://icon.ico"
 
 [autoload]
 
 AudioSettings="*res://audio_settings.gd"
 GameSettings="*res://game_settings.gd"
+Difficulties="*res://difficulties.gd"
 
 [display]
 

@@ -7,8 +7,8 @@ signal night_lost
 
 @export_group("Gece")
 @export var night: int = 1
-@export var seconds_per_hour: float = 30.0
-@export var six_am_clock_display_time: float = 2.0
+@export var seconds_per_hour: float = 60.0
+@export var six_am_clock_display_time: float = 1.0
 @export var six_am_fade_duration: float = 1.2
 
 @export_group("HUD")
@@ -31,8 +31,6 @@ var _six_am_triggered: bool = false
 var _hud_layer: CanvasLayer
 var _top_right_panel: Control
 var _cam_ui: CameraSystemUI
-var _paused_by_escape: bool = false
-var _mouse_mode_before_pause: int = Input.MOUSE_MODE_VISIBLE
 var _aux_screen_open: bool = false
 var _saved_bus_volumes_db: Dictionary = {}
 
@@ -47,22 +45,24 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not event.is_action_pressed("ui_cancel") or _finished or _six_am_triggered:
+	if _finished or _six_am_triggered:
 		return
-
-	if _paused_by_escape:
-		_paused_by_escape = false
-		get_tree().paused = false
-		Input.set_mouse_mode(_mouse_mode_before_pause)
+	var back_pressed := event.is_action_pressed("ui_cancel")
+	if event is InputEventKey and event.pressed and not event.echo:
+		var key_event := event as InputEventKey
+		back_pressed = back_pressed or key_event.keycode in [KEY_ESCAPE, KEY_BACK]
+	if not back_pressed:
 		return
+	_return_to_main_menu()
 
-	if _is_camera_open() or _aux_screen_open:
-		return
 
-	_mouse_mode_before_pause = Input.mouse_mode
-	_paused_by_escape = true
+func _return_to_main_menu() -> void:
+	get_tree().paused = false
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	get_tree().paused = true
+	if ResourceLoader.exists("res://main_menu.tscn"):
+		get_tree().change_scene_to_file("res://main_menu.tscn")
+	else:
+		push_error("Main menu scene is missing: res://main_menu.tscn")
 
 
 func _notification(what: int) -> void:
@@ -99,8 +99,10 @@ func trigger_game_over() -> void:
 	if _finished or _six_am_triggered:
 		return
 	_finished = true
+	_freeze_game_and_mute_audio()
 	night_lost.emit()
 	await _show_end_screen("GAME_OVER", "GAME OVER")
+	_restore_audio_and_unpause()
 	get_tree().reload_current_scene()
 
 
@@ -108,7 +110,7 @@ func _process(delta: float) -> void:
 	_layout_top_right()
 	_sync_clock_visibility()
 
-	if _paused_by_escape or _finished or _six_am_triggered:
+	if _finished or _six_am_triggered:
 		return
 
 	var hour_len: float = maxf(seconds_per_hour, 0.01)
@@ -130,17 +132,22 @@ func _start_six_am_sequence() -> void:
 	_six_am_triggered = true
 	_refresh_hud()
 	_sync_clock_visibility()
-	await get_tree().create_timer(maxf(six_am_clock_display_time, 0.01)).timeout
 	if _finished:
 		return
-	_win()
+	await _win()
 
 
 func _win() -> void:
 	if _finished:
 		return
+	if not Difficulties.custom_night_active:
+		GameSettings.unlock_custom_night()
 	_finished = true
-	_freeze_game_and_mute_audio()
+	if not _cam_ui or not is_instance_valid(_cam_ui):
+		_connect_camera_system_ui()
+	if _cam_ui and is_instance_valid(_cam_ui):
+		_cam_ui.hide_mobile_exit_button()
+	_freeze_game_and_mute_audio(true)
 	night_won.emit()
 	await _show_end_screen("WIN_TEXT", "6 AM", six_am_fade_duration)
 	_restore_audio_and_unpause()
@@ -148,26 +155,33 @@ func _win() -> void:
 		get_tree().change_scene_to_file("res://main_menu.tscn")
 
 
-func _freeze_game_and_mute_audio() -> void:
+func _freeze_game_and_mute_audio(stop_jumpscare_audio: bool = false) -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().paused = true
 	_saved_bus_volumes_db.clear()
 	for bus_idx in range(AudioServer.bus_count):
 		var bus_name := AudioServer.get_bus_name(bus_idx)
 		_saved_bus_volumes_db[bus_name] = AudioServer.get_bus_volume_db(bus_idx)
-		AudioServer.set_bus_volume_db(bus_idx, AudioSettings.MUTED_DB)
-	_stop_all_audio_players(get_tree().root)
+		if stop_jumpscare_audio or (bus_name != AudioSettings.JUMPSCARE_BUS_NAME and bus_name != "Master"):
+			AudioServer.set_bus_volume_db(bus_idx, AudioSettings.MUTED_DB)
+	_stop_all_audio_players(get_tree().root, stop_jumpscare_audio)
 
 
-func _stop_all_audio_players(node: Node) -> void:
+func _stop_all_audio_players(node: Node, stop_jumpscare_audio: bool = false) -> void:
 	if node is AudioStreamPlayer:
-		(node as AudioStreamPlayer).stop()
+		var player := node as AudioStreamPlayer
+		if stop_jumpscare_audio or player.bus != AudioSettings.JUMPSCARE_BUS_NAME:
+			player.stop()
 	elif node is AudioStreamPlayer2D:
-		(node as AudioStreamPlayer2D).stop()
+		var player := node as AudioStreamPlayer2D
+		if stop_jumpscare_audio or player.bus != AudioSettings.JUMPSCARE_BUS_NAME:
+			player.stop()
 	elif node is AudioStreamPlayer3D:
-		(node as AudioStreamPlayer3D).stop()
+		var player := node as AudioStreamPlayer3D
+		if stop_jumpscare_audio or player.bus != AudioSettings.JUMPSCARE_BUS_NAME:
+			player.stop()
 	for child in node.get_children():
-		_stop_all_audio_players(child)
+		_stop_all_audio_players(child, stop_jumpscare_audio)
 
 
 func _restore_audio_and_unpause() -> void:
@@ -327,7 +341,15 @@ func _layout_top_right() -> void:
 
 func _refresh_hud() -> void:
 	if night_label:
-		night_label.text = _fmt("NIGHT_LABEL", night, "NIGHT %d")
+		var max_custom_night := (
+			Difficulties.custom_night_active
+			and Difficulties.ouz_enabled
+			and Difficulties.mayinmelih_enabled
+			and Difficulties.get_level(Difficulties.OUZ) == 20
+			and Difficulties.get_level(Difficulties.MAYINMELIH) == 20
+		)
+		var night_label_key := "NIGHT_LABEL_MAX" if max_custom_night else ("MENU_CUSTOM_NIGHT" if Difficulties.custom_night_active else "NIGHT_LABEL")
+		night_label.text = tr(night_label_key)
 	if clock_label:
 		clock_label.text = _fmt("CLOCK_LABEL", get_display_hour(), "%d AM")
 

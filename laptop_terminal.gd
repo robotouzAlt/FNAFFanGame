@@ -5,6 +5,7 @@ const TERMINAL_GREEN := Color8(102, 225, 90)
 const EXIT_EDGE_RATIO := 0.94
 
 @export_range(0.2, 2.0, 0.05) var zoom_duration: float = 0.65
+@export var laptop_enabled: bool = false
 
 var _hitbox: GlowHitbox
 var _player_camera: PlayerCamera
@@ -28,6 +29,18 @@ var _saved_hitbox_fade_in: float = 0.45
 func _ready() -> void:
 	var world := get_tree().root
 	_hitbox = world.find_child("LaptopHitbox", true, false) as GlowHitbox
+	if not laptop_enabled:
+		if _hitbox:
+			_hitbox.set_process(false)
+			_hitbox.set_process_input(false)
+			_hitbox.monitoring = false
+			_hitbox.monitorable = false
+			_hitbox.collision_layer = 0
+			_hitbox.collision_mask = 0
+			_hitbox.input_ray_pickable = false
+		set_process(false)
+		set_process_input(false)
+		return
 	_player_camera = world.find_child("Camera3D", true, false) as PlayerCamera
 	_zoom_camera = world.find_child("LaptopZoomView", true, false) as Camera3D
 	_screen = world.find_child("Lekran", true, false) as CSGPrimitive3D
@@ -104,7 +117,7 @@ func _create_terminal_ui() -> void:
 	layout.add_theme_constant_override("separation", 14)
 	_panel.add_child(layout)
 	var title := Label.new()
-	title.text = "OUZ TERMINAL  //  SECURITY NETWORK"
+	title.text = tr("TERMINAL_TITLE")
 	title.add_theme_color_override("font_color", TERMINAL_GREEN)
 	title.add_theme_font_size_override("font_size", 24)
 	layout.add_child(title)
@@ -146,7 +159,7 @@ func _create_terminal_ui() -> void:
 	cursor_blink.tween_property(_cursor_label, "modulate:a", 1.0, 0.45)
 
 	var footer := Label.new()
-	footer.text = "TAP OR MOVE THE POINTER TO THE LOWER EDGE TO RETURN"
+	footer.text = tr("TERMINAL_RETURN_HINT")
 	footer.add_theme_color_override("font_color", Color(TERMINAL_GREEN, 0.75))
 	footer.add_theme_font_size_override("font_size", 12)
 	layout.add_child(footer)
@@ -218,16 +231,16 @@ func _close_terminal() -> void:
 
 func _reset_terminal_text() -> void:
 	_output_lines = PackedStringArray([
-		"REMOTE ACCESS ESTABLISHED",
+		tr("TERMINAL_REMOTE_ACCESS"),
 		"",
 		"> CAMERAS",
-		"  View the available security feeds.",
+		"  " + tr("TERMINAL_CAMERAS_HINT"),
 		"> MUSICBOX",
-		"  Monitor the common room mechanism.",
+		"  " + tr("TERMINAL_MUSICBOX_HINT"),
 		"> STATUS",
-		"  Check terminal connection status.",
+		"  " + tr("TERMINAL_STATUS_HINT"),
 		"",
-		"TYPE HELP FOR COMMANDS"
+		tr("TERMINAL_HELP_HINT")
 	])
 	_update_output()
 
@@ -240,13 +253,13 @@ func _on_command_submitted(command: String) -> void:
 	_output_lines.append("> " + normalized)
 	match normalized:
 		"HELP":
-			_output_lines.append("COMMANDS: CAMERAS, MUSICBOX, STATUS, CLEAR, EXIT")
+			_output_lines.append(tr("TERMINAL_COMMANDS"))
 		"CAMERAS":
-			_output_lines.append("SECURITY FEEDS ARE AVAILABLE THROUGH THE OFFICE MONITOR.")
+			_output_lines.append(tr("TERMINAL_CAMERAS_RESPONSE"))
 		"MUSICBOX":
-			_output_lines.append("SELECT CAM 11 AND HOLD WIND MUSIC BOX TO RECHARGE.")
+			_output_lines.append(tr("TERMINAL_MUSICBOX_RESPONSE"))
 		"STATUS":
-			_output_lines.append("CONNECTION: ACTIVE  //  CAMERA NETWORK: ONLINE")
+			_output_lines.append(tr("TERMINAL_STATUS_RESPONSE"))
 		"CLEAR":
 			_output_lines.clear()
 		"EXIT":
@@ -254,7 +267,7 @@ func _on_command_submitted(command: String) -> void:
 			_close_terminal()
 			return
 		_:
-			_output_lines.append("UNKNOWN COMMAND")
+			_output_lines.append(tr("TERMINAL_UNKNOWN_COMMAND"))
 	_update_output()
 	_cursor_label.visible = _input_line.text.is_empty()
 

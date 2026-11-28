@@ -3,6 +3,8 @@ extends CharacterBody3D
 
 const DEBUG_CODE: Array[Key] = [KEY_D, KEY_E, KEY_B, KEY_U, KEY_G]
 
+@export var debug_walker_enabled: bool = false
+
 @export_group("Hareket")
 @export var walk_speed: float = 5.5
 @export var sprint_speed: float = 9.5
@@ -85,6 +87,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process_debug_code(keycode: Key) -> bool:
+	if not debug_walker_enabled:
+		_debug_code_index = 0
+		if _debug_mode:
+			_exit_debug_mode()
+		return false
 	if keycode == DEBUG_CODE[_debug_code_index]:
 		_debug_code_index += 1
 		if _debug_code_index >= DEBUG_CODE.size():

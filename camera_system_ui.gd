@@ -10,10 +10,14 @@ const BTN_HOVER = preload("res://png/btn_hover.png")
 const BTN_PRESSED = preload("res://png/btn_pressed.png")
 const MUSIC_BOX_CAUTION_TEXTURE: Texture2D = preload("res://png/caution.png")
 const CAMERA_MAP_TEX: Texture2D = preload("res://png/camera_map.png")
+const EXIT_TEXTURE: Texture2D = preload("res://png/exit.png")
+## Mobilde masadan çıkış düğmesinin genişliği (piksel). Buradan değiştirebilirsin.
+const MOBILE_HIDE_EXIT_BUTTON_WIDTH: float = 260.0
 const MUSIC_ICON_TEX: Texture2D = preload("res://png/music.png")
 const AUDIO_ICON_TEX: Texture2D = preload("res://png/audio.png")
 const MUSIC_CHANGE_ICON_TEX: Texture2D = preload("res://png/musicchange.png")
 const CHANGE_REQUEST_SOUND: AudioStream = preload("res://audio/MusicChangeRequest.wav")
+const WINDING_SOUND: AudioStream = preload("res://audio/winding.wav")
 const AUDIO_WAVE_EFFECT_SCRIPT = preload("res://audio_wave_effect.gd")
 const CAM_COUNT: int = 13
 const STATIC_DIR_CANDIDATES: PackedStringArray = [
@@ -33,6 +37,7 @@ signal music_change_requested
 signal opened
 signal closed
 signal lost_signal_finished
+signal mobile_hide_exit_requested
 
 @export_group("Görsel")
 @export var win95_font: FontFile
@@ -111,6 +116,16 @@ signal lost_signal_finished
 @export var line_2_num_offset_y: float = 8.0
 
 @export_group("Harita Çizgileri")
+@export var seal_lines_enabled: bool = false:
+	set(value):
+		seal_lines_enabled = value
+		if is_node_ready():
+			for line: ColorRect in _map_lines:
+				if line and is_instance_valid(line):
+					line.visible = value
+			for num_lbl: Label in _map_line_labels:
+				if num_lbl and is_instance_valid(num_lbl):
+					num_lbl.visible = value
 @export var map_line_color: Color = Color(0.10, 1.0, 0.25, 0.95)
 @export var map_line_number_color: Color = Color(1.0, 0.35, 0.75, 1.0)
 @export var map_line_thickness: float = 2.0
@@ -149,12 +164,12 @@ signal lost_signal_finished
 @export var cam3_map_anchor: Vector2 = Vector2(0.51, 0.32)
 @export var cam4_map_anchor: Vector2 = Vector2(0.43, 0.41)
 @export var cam5_map_anchor: Vector2 = Vector2(0.57, 0.44)
-@export var cam6_map_anchor: Vector2 = Vector2(0.68, 0.42)
+@export var cam6_map_anchor: Vector2 = Vector2(0.70, 0.42)
 @export var cam7_map_anchor: Vector2 = Vector2(0.13, 0.51)
 @export var cam8_map_anchor: Vector2 = Vector2(0.33, 0.57)
 @export var cam9_map_anchor: Vector2 = Vector2(0.41, 0.68)
 @export var cam10_map_anchor: Vector2 = Vector2(0.35, 0.78)
-@export var cam11_map_anchor: Vector2 = Vector2(0.47, 0.78)
+@export var cam11_map_anchor: Vector2 = Vector2(0.48, 0.78)
 @export var cam12_map_anchor: Vector2 = Vector2(0.68, 0.74)
 @export var cam13_map_anchor: Vector2 = Vector2(0.82, 0.74)
 
@@ -172,28 +187,25 @@ signal lost_signal_finished
 @export_range(1.0, 300.0, 1.0) var bottom_exit_trigger_distance: float = 24.0
 
 @export_group("Monitör Efekti")
-@export_range(-80.0, 12.0, 0.5) var monitor_open_volume_db: float = -36.0
-@export_range(-80.0, 12.0, 0.5) var monitor_glow_max_volume_db: float = -48.0
 @export_range(0.01, 1.0, 0.01) var monitor_glow_fade_in_time: float = 0.06
 @export_range(0.01, 2.0, 0.01) var monitor_glow_fade_out_time: float = 0.55
-@export_range(-80.0, 12.0, 0.5) var after_lost_volume_db: float = -52.0
 
 @export_group("Canavar Sistemi")
 @export var play_sound_translation_key: String = "PLAY_AUDIO"
 @export var lost_signal_translation_key: String = "LOST_SIGNAL"
-@export var play_sound_cooldown: float = 10.0
+@export_range(0.0, 60.0, 0.1) var play_sound_cooldown: float = 9.0
 @export var lost_signal_time: float = 0.5
 @export var pending_after_lost_time: float = 0.45
 @export_group("Music Box Button Layout")
-@export_range(16.0, 512.0, 0.1) var wind_music_box_button_size: float = 64.0
+@export_range(16.0, 512.0, 0.1) var wind_music_box_button_size: float = 128.0
 @export_range(-2000.0, 2000.0, 0.1) var wind_music_box_button_left: float = 24.0
-@export_range(-2000.0, 2000.0, 0.1) var wind_music_box_button_bottom: float = 24.0
-@export_range(16.0, 512.0, 0.1) var change_music_button_size: float = 64.0
-@export_range(-2000.0, 2000.0, 0.1) var change_music_button_left: float = 100.0
-@export_range(-2000.0, 2000.0, 0.1) var change_music_button_bottom: float = 24.0
-@export_range(16.0, 512.0, 0.1) var play_audio_button_size: float = 64.0
-@export_range(-2000.0, 2000.0, 0.1) var play_audio_button_center_offset_x: float = 0.0
-@export_range(-2000.0, 2000.0, 0.1) var play_audio_button_bottom: float = 24.0
+@export_range(-2000.0, 2000.0, 0.1) var wind_music_box_button_bottom: float = 250.0
+@export_range(16.0, 512.0, 0.1) var change_music_button_size: float = 128.0
+@export_range(-2000.0, 2000.0, 0.1) var change_music_button_left: float = 24.0
+@export_range(-2000.0, 2000.0, 0.1) var change_music_button_bottom: float = 390.0
+@export_range(16.0, 512.0, 0.1) var play_audio_button_size: float = 128.0
+@export_range(-2000.0, 2000.0, 0.1) var play_audio_button_left: float = 24.0
+@export_range(-2000.0, 2000.0, 0.1) var play_audio_button_bottom: float = 110.0
 @export_group("Music Box")
 @export_range(0.0, 0.2) var office_static_alpha: float = 0.05
 @export var office_static_fade_time: float = 0.5
@@ -201,19 +213,23 @@ signal lost_signal_finished
 @export_range(40.0, 200.0, 0.01) var music_box_alt_bpm: float = 82.4
 @export_group("Small Caution Layout (Cam11)")
 @export_range(1.0, 512.0, 0.1) var small_charge_caution_size: float = 56.0
-@export_range(-2000.0, 2000.0, 0.1) var small_charge_caution_left: float = 280.0
-@export_range(-2000.0, 2000.0, 0.1) var small_charge_caution_bottom: float = 55.0
+@export_range(-2000.0, 2000.0, 0.1) var small_charge_caution_left: float = 170.0
+@export_range(-2000.0, 2000.0, 0.1) var small_charge_caution_bottom: float = 285.0
 @export_range(1.0, 512.0, 0.1) var small_request_caution_size: float = 56.0
-@export_range(-2000.0, 2000.0, 0.1) var small_request_caution_left: float = 348.0
-@export_range(-2000.0, 2000.0, 0.1) var small_request_caution_bottom: float = 55.0
+@export_range(-2000.0, 2000.0, 0.1) var small_request_caution_left: float = 170.0
+@export_range(-2000.0, 2000.0, 0.1) var small_request_caution_bottom: float = 430.0
 
 @export_group("Large Caution Layout (Other Cameras)")
 @export_range(1.0, 512.0, 0.1) var large_charge_caution_size: float = 120.0
-@export_range(-2000.0, 2000.0, 0.1) var large_charge_caution_left: float = 85.0
-@export_range(-2000.0, 2000.0, 0.1) var large_charge_caution_bottom: float = 130.0
+@export_range(-2000.0, 2000.0, 0.1) var large_charge_caution_left: float = 30.0
+@export_range(-2000.0, 2000.0, 0.1) var large_charge_caution_bottom: float = 250.0
 @export_range(1.0, 512.0, 0.1) var large_request_caution_size: float = 120.0
-@export_range(-2000.0, 2000.0, 0.1) var large_request_caution_left: float = 217.0
-@export_range(-2000.0, 2000.0, 0.1) var large_request_caution_bottom: float = 130.0
+@export_range(-2000.0, 2000.0, 0.1) var large_request_caution_left: float = 30.0
+@export_range(-2000.0, 2000.0, 0.1) var large_request_caution_bottom: float = 400.0
+
+@export_group("70 BPM Caution Layout")
+@export_range(-2000.0, 2000.0, 0.1) var late_70_bpm_caution_left: float = 210.0
+@export_range(-2000.0, 2000.0, 0.1) var late_70_bpm_caution_bottom: float = 110.0
 
 @export var line_1_num_offset_x: float = 2.0
 @export var line_2_num_offset_x: float = 1.0
@@ -266,6 +282,11 @@ var _last_static: int = -1
 var _buttons_initialized: bool = false
 var _base_cam_quat: Quaternion = Quaternion.IDENTITY
 var _btn_play_sound: Button
+var _mobile_exit_button: Button
+var _mobile_exit_layer: CanvasLayer
+var _mobile_cursor: TextureRect
+var _mobile_cursor_has_position: bool = false
+var _mobile_hide_exit_mode: bool = false
 var _audio_wave_effect: Control
 var _lost_signal_audio: AudioStreamPlayer3D
 var _after_lost_audio: AudioStreamPlayer3D
@@ -297,18 +318,25 @@ var _request_bar_fill: ColorRect
 var _music_box_caution: TextureRect
 var _music_box_caution_late: TextureRect
 var _music_box_request_caution: TextureRect
+var _music_box_request_caution_debug: TextureRect
 var _music_box_caution_tween: Tween
+var _music_box_caution_late_animation_tween: Tween
 var _music_box_warning_late_tween: Tween
 var _music_box_opacity_tween: Tween
 var _music_box_warning_tween: Tween
 var _music_box_request_caution_tween: Tween
+var _music_box_request_caution_debug_tween: Tween
 var _music_box_request_caution_visibility_tween: Tween
 var _music_box_request_caution_target: bool = false
+var _debug_mode: bool = false
 var _music_box_charge: float = 1.0
 var _music_box_enabled: bool = true
 var _music_box_winding: bool = false
 var _music_box_beat_left: float = 0.0
 var _music_box_beat_sign: float = 1.0
+var _winding_audio_player: AudioStreamPlayer
+var _winding_audio_active: bool = false
+var _winding_audio_beat_left: float = 0.0
 var _music_box_warning_target: bool = false
 var _music_box_warning_late_target: bool = false
 var _music_box_late_active: bool = false
@@ -319,6 +347,7 @@ var _change_btn_beat_left: float = 0.0
 var _change_btn_yellow: bool = false
 var _input_blocked: bool = false
 var _jumpscare_interrupted: bool = false
+var _mobile_exit_suppressed_for_jumpscare: bool = false
 var _music_box_danger_beat_count: int = 0
 var _music_box_request_beat_left: float = 0.0
 var _music_box_request_beat_sign: float = 1.0
@@ -339,12 +368,17 @@ func _ready() -> void:
 
 	for stale_layer in get_tree().root.find_children("OfficeStaticEffect", "CanvasLayer", true, false):
 		stale_layer.queue_free()
+	_music_box_enabled = Difficulties.ouz_enabled
 	visible = false
 	cam_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 	_load_static_frames_if_empty()
 
 	root_ctrl.mouse_filter = Control.MOUSE_FILTER_STOP
+	_ensure_mobile_exit_button()
+	_ensure_winding_audio_player()
+	if not GameSettings.mobile_mode_changed.is_connected(_on_mobile_mode_changed):
+		GameSettings.mobile_mode_changed.connect(_on_mobile_mode_changed)
 	static_noise.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	scanline.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -451,7 +485,7 @@ func _get_cam_code(index: int) -> String:
 
 
 func _get_cam_button_text(index: int) -> String:
-	return "CAM\n%s" % _get_cam_code(index)
+	return "%s\n%s" % [tr("CAM"), _get_cam_code(index)]
 
 
 func _get_effective_map_scale() -> float:
@@ -472,7 +506,7 @@ func _get_line_scale() -> float:
 
 
 func _get_scaled_cam_button_size() -> Vector2:
-	return cam_button_size * _get_hud_scale()
+	return cam_button_size * GameSettings.camera_button_size_scale * _get_hud_scale()
 
 
 func _clamp_current_cam() -> void:
@@ -525,11 +559,16 @@ func _scan_dir_for_statics(dir_path: String, found_paths: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
+	if not Difficulties.ouz_enabled and _music_box_enabled:
+		set_music_box_enabled(false, true)
 	_process_office_static(delta)
 	_process_music_box_warning(delta)
 	_process_change_button_beat(delta)
 	_update_music_box_winding_from_mouse()
-	if not _input_blocked:
+	_process_winding_audio(delta)
+	_update_play_sound_button()
+	_update_mobile_cursor_visibility()
+	if not _input_blocked and not GameSettings.mobile_mode:
 		_check_bottom_edge_exit()
 	if _play_cooldown_left > 0.0:
 		_play_cooldown_left = maxf(_play_cooldown_left - delta, 0.0)
@@ -543,8 +582,144 @@ func _process(delta: float) -> void:
 		_blend_camera_rotation(_base_cam_quat, delta)
 
 
+func _ensure_mobile_exit_button() -> void:
+	_mobile_exit_layer = CanvasLayer.new()
+	_mobile_exit_layer.name = "MobileExitOverlay"
+	_mobile_exit_layer.layer = 100
+	add_child(_mobile_exit_layer)
+
+	_mobile_exit_button = Button.new()
+	_mobile_exit_button.name = "MobileExitButton"
+	_mobile_exit_button.text = ""
+	_mobile_exit_button.custom_minimum_size = Vector2(128.0, 60.0)
+	_mobile_exit_button.focus_mode = Control.FOCUS_NONE
+	_mobile_exit_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_mobile_exit_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_mobile_exit_button.add_theme_stylebox_override("normal", _make_style(BTN_NORMAL))
+	_mobile_exit_button.add_theme_stylebox_override("hover", _make_style(BTN_HOVER))
+	_mobile_exit_button.add_theme_stylebox_override("pressed", _make_style(BTN_PRESSED))
+	_mobile_exit_button.add_theme_stylebox_override("hover_pressed", _make_style(BTN_PRESSED))
+	_mobile_exit_button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	_set_mobile_exit_button_position(false)
+	_mobile_exit_button.z_index = 45
+	_mobile_exit_button.visible = false
+	_mobile_exit_button.pressed.connect(_on_mobile_exit_pressed)
+	var icon := TextureRect.new()
+	icon.name = "Icon"
+	icon.texture = EXIT_TEXTURE
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	icon.offset_left = -22.0
+	icon.offset_top = -22.0
+	icon.offset_right = 22.0
+	icon.offset_bottom = 22.0
+	_mobile_exit_button.add_child(icon)
+	_mobile_exit_layer.add_child(_mobile_exit_button)
+
+	_mobile_cursor = TextureRect.new()
+	_mobile_cursor.name = "MobileWin95Cursor"
+	_mobile_cursor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mobile_cursor.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_mobile_cursor.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_mobile_cursor.custom_minimum_size = Vector2(48.0, 48.0)
+	_mobile_cursor.size = Vector2(48.0, 48.0)
+	_mobile_cursor.z_index = 60
+	_mobile_cursor.visible = false
+	_mobile_exit_layer.add_child(_mobile_cursor)
+
+
+func _on_mobile_exit_pressed() -> void:
+	if _mobile_hide_exit_mode:
+		set_mobile_hide_exit_mode(false)
+		mobile_hide_exit_requested.emit()
+		return
+	_trigger_bottom_exit()
+
+
+func _on_mobile_mode_changed(_enabled: bool) -> void:
+	_update_mobile_exit_button()
+	_update_mobile_cursor_visibility()
+
+
+func _update_mobile_cursor_visibility() -> void:
+	if not _mobile_cursor or not is_instance_valid(_mobile_cursor):
+		return
+	_mobile_cursor.visible = (
+		GameSettings.mobile_mode
+		and visible
+		and _state != State.IDLE
+		and not _input_blocked
+		and _mobile_cursor_has_position
+	)
+
+
+func _update_mobile_cursor_at(viewport_position: Vector2) -> void:
+	if not _mobile_cursor or not is_instance_valid(_mobile_cursor):
+		return
+	var over_clickable := _is_mobile_clickable_at(viewport_position)
+	var cursor_texture := CURSOR_HAND if over_clickable else CURSOR_ARROW
+	_mobile_cursor.texture = cursor_texture
+	var cursor_size := Vector2(48.0, 48.0)
+	_mobile_cursor.position = viewport_position - (hand_hotspot if over_clickable else Vector2.ZERO)
+	_mobile_cursor.size = cursor_size
+	_mobile_cursor_has_position = true
+	_update_mobile_cursor_visibility()
+
+
+func _is_mobile_clickable_at(viewport_position: Vector2) -> bool:
+	var controls: Array[Control] = []
+	for button: Button in _cam_buttons:
+		if button and is_instance_valid(button):
+			controls.append(button)
+	for control: Control in [_mobile_exit_button, _btn_play_sound, _music_box_wind_button, _music_box_change_button]:
+		if control and is_instance_valid(control):
+			controls.append(control)
+	for control: Control in controls:
+		if not control.visible or control.mouse_filter == Control.MOUSE_FILTER_IGNORE:
+			continue
+		if control is BaseButton and (control as BaseButton).disabled:
+			continue
+		if control.get_global_rect().has_point(viewport_position):
+			return true
+	return false
+
+
+func _update_mobile_exit_button() -> void:
+	if _mobile_exit_button and is_instance_valid(_mobile_exit_button):
+		_mobile_exit_button.visible = (
+			GameSettings.mobile_mode
+			and not _mobile_exit_suppressed_for_jumpscare
+			and (_mobile_hide_exit_mode or (_state == State.ACTIVE and visible))
+		)
+
+
+func set_mobile_hide_exit_mode(enabled: bool) -> void:
+	_mobile_hide_exit_mode = enabled
+	_set_mobile_exit_button_position(enabled)
+	_update_mobile_exit_button()
+
+
+func _set_mobile_exit_button_position(centered: bool) -> void:
+	if not _mobile_exit_button:
+		return
+	if centered:
+		_mobile_exit_button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		_mobile_exit_button.offset_left = -MOBILE_HIDE_EXIT_BUTTON_WIDTH * 0.5
+		_mobile_exit_button.offset_top = -84.0
+		_mobile_exit_button.offset_right = MOBILE_HIDE_EXIT_BUTTON_WIDTH * 0.5
+		_mobile_exit_button.offset_bottom = -24.0
+	else:
+		_mobile_exit_button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+		_mobile_exit_button.offset_left = -250.0
+		_mobile_exit_button.offset_top = -84.0
+		_mobile_exit_button.offset_right = -24.0
+		_mobile_exit_button.offset_bottom = -24.0
+
+
 func _check_bottom_edge_exit() -> void:
-	if _input_blocked or _state != State.ACTIVE or _switching_cam:
+	if _input_blocked or _state != State.ACTIVE or (_switching_cam and not _lost_signal_active) or GameSettings.mobile_mode:
 		return
 	var vp_height := _get_root_viewport_size().y
 	if vp_height <= 1.0:
@@ -556,7 +731,7 @@ func _check_bottom_edge_exit() -> void:
 
 
 func _trigger_bottom_exit() -> void:
-	if _input_blocked or _state != State.ACTIVE or _switching_cam:
+	if _input_blocked or _state != State.ACTIVE or (_switching_cam and not _lost_signal_active):
 		return
 	_play_audio(_click_audio)
 	_close_ui()
@@ -627,7 +802,7 @@ func _apply_map_line_number_style(lbl: Label, num: int) -> void:
 	lbl.add_theme_color_override("font_color", map_line_number_color)
 	lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
 	lbl.add_theme_constant_override("outline_size", maxi(int(round(1.0 * hs)), 1))
-	lbl.visible = true
+	lbl.visible = seal_lines_enabled
 
 
 func set_map_line_anchor(line_index: int, anchor: Vector2) -> void:
@@ -670,7 +845,7 @@ func _ensure_map_lines() -> void:
 		if line.name != clean_name:
 			line.name = clean_name
 		line.color = map_line_color
-		line.visible = true
+		line.visible = seal_lines_enabled
 
 		var num_lbl: Label
 		if i < _map_line_labels.size() and _map_line_labels[i] and is_instance_valid(_map_line_labels[i]):
@@ -743,7 +918,7 @@ func _layout_map_lines() -> void:
 		)
 		var clamped_rect := _clamp_rect_to_bounds(center - (sz * 0.5), sz, safe_bounds)
 		line.color = map_line_color
-		line.visible = true
+		line.visible = seal_lines_enabled
 		line.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_KEEP_SIZE)
 		line.offset_left = clamped_rect.position.x
 		line.offset_top = clamped_rect.position.y
@@ -911,9 +1086,9 @@ func _order_pending_behind_hud() -> void:
 	_raise_all_buttons_above_pending()
 
 
-func _set_transition_controls_behind(behind: bool) -> void:
+func _set_transition_controls_behind(_behind: bool) -> void:
 	if _audio_wave_effect and is_instance_valid(_audio_wave_effect):
-		_audio_wave_effect.z_index = -1 if behind else 20
+		_audio_wave_effect.z_index = 30
 	if _music_box_bar_bg and is_instance_valid(_music_box_bar_bg):
 		_music_box_bar_bg.z_index = 26
 	if _request_bar_bg and is_instance_valid(_request_bar_bg):
@@ -1047,6 +1222,15 @@ func _exit_tree() -> void:
 func _input(event: InputEvent) -> void:
 	if _input_blocked and (event is InputEventMouseButton or event is InputEventMouseMotion):
 		get_viewport().set_input_as_handled()
+		return
+	if not GameSettings.mobile_mode or _state == State.IDLE or not visible or _input_blocked:
+		return
+	if event is InputEventScreenTouch:
+		_update_mobile_cursor_at((event as InputEventScreenTouch).position)
+	elif event is InputEventScreenDrag:
+		_update_mobile_cursor_at((event as InputEventScreenDrag).position)
+	elif event is InputEventMouseMotion:
+		_update_mobile_cursor_at((event as InputEventMouseMotion).position)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -1060,7 +1244,8 @@ func _register_universal_player(source_3d: AudioStreamPlayer3D, volume_db: float
 	if not source_3d or not is_instance_valid(source_3d):
 		return
 	source_3d.stop()
-	source_3d.volume_db = -80.0
+	source_3d.volume_db = AudioSettings.MUTED_DB
+	source_3d.max_db = AudioSettings.WORLD_AUDIO_MAX_DB
 	var player: AudioStreamPlayer
 	if _universal_audio_players.has(source_3d) and is_instance_valid(_universal_audio_players[source_3d]):
 		player = _universal_audio_players[source_3d] as AudioStreamPlayer
@@ -1079,7 +1264,7 @@ func _get_universal_player(source_3d: AudioStreamPlayer3D) -> AudioStreamPlayer:
 	if not source_3d or not is_instance_valid(source_3d):
 		return null
 	if not _universal_audio_players.has(source_3d) or not is_instance_valid(_universal_audio_players[source_3d]):
-		_register_universal_player(source_3d, -4.0)
+		_register_universal_player(source_3d, AudioSettings.UNIVERSAL_SFX_DB)
 	var player := _universal_audio_players[source_3d] as AudioStreamPlayer
 	if player and is_instance_valid(player):
 		player.stream = source_3d.stream
@@ -1101,15 +1286,13 @@ func _find_world_nodes() -> bool:
 	_click_audio = tree_root.find_child("Click", true, false) as AudioStreamPlayer3D
 	_danger_audio = tree_root.find_child("Danger", true, false) as AudioStreamPlayer3D
 
-	for player: AudioStreamPlayer3D in [_lost_signal_audio, _after_lost_audio, _camera_select_audio, _monitor_glow_audio, _monitor_open_audio, _click_audio, _danger_audio]:
-		if player:
-			_register_universal_player(player, -4.0)
-	if _danger_audio and _universal_audio_players.has(_danger_audio):
-		(_universal_audio_players[_danger_audio] as AudioStreamPlayer).volume_db = -12.0
-	if _after_lost_audio and _universal_audio_players.has(_after_lost_audio):
-		(_universal_audio_players[_after_lost_audio] as AudioStreamPlayer).volume_db = -32.0
-	if _monitor_open_audio and _universal_audio_players.has(_monitor_open_audio):
-		(_universal_audio_players[_monitor_open_audio] as AudioStreamPlayer).volume_db = monitor_open_volume_db
+	_register_universal_player(_lost_signal_audio, AudioSettings.CAMERA_LOST_SIGNAL_DB)
+	_register_universal_player(_after_lost_audio, AudioSettings.CAMERA_AFTER_LOST_DB)
+	_register_universal_player(_camera_select_audio, AudioSettings.CAMERA_SELECT_DB)
+	_register_universal_player(_monitor_glow_audio, AudioSettings.MUTED_DB)
+	_register_universal_player(_monitor_open_audio, AudioSettings.MONITOR_OPEN_DB)
+	_register_universal_player(_click_audio, AudioSettings.CAMERA_CLICK_DB)
+	_register_universal_player(_danger_audio, AudioSettings.CAMERA_DANGER_DB)
 
 	if _hitbox and not _hitbox.hover_changed.is_connected(_on_monitor_hover_changed):
 		_hitbox.hover_changed.connect(_on_monitor_hover_changed)
@@ -1373,6 +1556,7 @@ func _on_monitor_clicked() -> void:
 	if _state != State.IDLE:
 		return
 	_jumpscare_interrupted = false
+	_mobile_exit_suppressed_for_jumpscare = false
 	_mouse_mode_before_cams = Input.mouse_mode
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	opened.emit()
@@ -1423,6 +1607,7 @@ func _open_ui() -> void:
 		_pending_overlay.visible = false
 
 	_state = State.ACTIVE
+	_update_mobile_exit_button()
 	_update_music_box_controls()
 	if _close_requested:
 		_close_requested = false
@@ -1431,6 +1616,8 @@ func _open_ui() -> void:
 
 func _close_ui() -> void:
 	_state = State.CLOSING
+	_update_play_sound_button()
+	_update_mobile_exit_button()
 	closed.emit()
 	_close_requested = false
 	overlay.color = _get_overlay_color()
@@ -1788,19 +1975,23 @@ func _update_request_bar() -> void:
 	var fill_w := total_w * _song_request_progress
 	_request_bar_fill.size.x = fill_w
 	_request_bar_fill.position.x = total_w - fill_w
+	_request_bar_fill.color = _get_music_box_request_bar_color()
+
+func _get_music_box_request_bar_color() -> Color:
 	var green := Color(0.0, 1.0, 0.0, 1.0)
 	var yellow := Color(1.0, 0.88, 0.12, 1.0)
 	var red := Color(1.0, 0.04, 0.02, 1.0)
 	if _song_request_progress >= 0.77:
-		_request_bar_fill.color = green
-	elif _song_request_progress >= 0.33:
+		return green
+	if _song_request_progress >= 0.33:
 		var yellow_t := clampf((0.77 - _song_request_progress) / (0.77 - 0.33), 0.0, 1.0)
-		_request_bar_fill.color = green.lerp(yellow, yellow_t)
-	elif _song_request_progress >= 0.16:
+		return green.lerp(yellow, yellow_t)
+	if _song_request_progress >= 0.16:
 		var red_t := clampf((0.33 - _song_request_progress) / (0.33 - 0.16), 0.0, 1.0)
-		_request_bar_fill.color = yellow.lerp(red, red_t)
-	else:
-		_request_bar_fill.color = red
+		return yellow.lerp(red, red_t)
+	return red
+
+
 
 func _process_change_button_beat(delta: float) -> void:
 	if not _music_box_change_button or not is_instance_valid(_music_box_change_button):
@@ -1986,6 +2177,18 @@ func _ensure_music_box_controls() -> void:
 	_music_box_request_caution.self_modulate = Color(1.0, 1.0, 1.0, 0.0)
 	root_ctrl.add_child(_music_box_request_caution)
 
+	_music_box_request_caution_debug = TextureRect.new()
+	_music_box_request_caution_debug.name = "MusicBoxRequestCautionDebug"
+	_music_box_request_caution_debug.texture = MUSIC_BOX_CAUTION_TEXTURE
+	_music_box_request_caution_debug.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_music_box_request_caution_debug.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_music_box_request_caution_debug.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_music_box_request_caution_debug.z_index = 30
+	_music_box_request_caution_debug.visible = true
+	_music_box_request_caution_debug.modulate = Color.WHITE
+	_music_box_request_caution_debug.self_modulate = Color(1.0, 1.0, 1.0, 0.0)
+	root_ctrl.add_child(_music_box_request_caution_debug)
+
 	_ensure_change_request_audio()
 	_layout_music_box_controls()
 	_update_music_box_controls()
@@ -2003,7 +2206,7 @@ func _ensure_change_request_audio() -> void:
 		add_child(_change_request_audio)
 	_change_request_audio.stream = CHANGE_REQUEST_SOUND
 	_change_request_audio.bus = "Master"
-	_change_request_audio.volume_db = AudioSettings.UNIVERSAL_SFX_DB
+	_change_request_audio.volume_db = AudioSettings.CAMERA_CHANGE_REQUEST_DB
 	_change_request_audio.position = Vector2.ZERO
 
 
@@ -2061,14 +2264,16 @@ func _layout_music_box_controls() -> void:
 
 func _layout_music_box_request_caution() -> void:
 	_layout_music_box_caution(_music_box_caution, small_charge_caution_size, small_charge_caution_left, small_charge_caution_bottom)
-	_layout_music_box_caution(_music_box_caution_late, large_charge_caution_size, large_charge_caution_left, large_charge_caution_bottom)
+	var late_caution_left := late_70_bpm_caution_left if _music_box_late_active else large_charge_caution_left
+	var late_caution_bottom := late_70_bpm_caution_bottom if _music_box_late_active else large_charge_caution_bottom
+	_layout_music_box_caution(_music_box_caution_late, large_charge_caution_size, late_caution_left, late_caution_bottom)
 	var is_cam11 := _current_cam == 10
-	var request_icon := _music_box_request_caution
 	if is_cam11:
-		_layout_music_box_caution(request_icon, small_request_caution_size, small_request_caution_left, small_request_caution_bottom)
+		_layout_music_box_caution(_music_box_request_caution, small_request_caution_size, small_request_caution_left, small_request_caution_bottom)
+		_layout_music_box_caution(_music_box_request_caution_debug, large_request_caution_size, large_request_caution_left, large_request_caution_bottom)
 	else:
-		_layout_music_box_caution(request_icon, large_request_caution_size, large_request_caution_left, large_request_caution_bottom)
-
+		_layout_music_box_caution(_music_box_request_caution, large_request_caution_size, large_request_caution_left, large_request_caution_bottom)
+		_layout_music_box_caution(_music_box_request_caution_debug, small_request_caution_size, small_request_caution_left, small_request_caution_bottom)
 
 func _layout_music_box_caution(icon: TextureRect, icon_size: float, left: float, bottom: float) -> void:
 	if not icon or not is_instance_valid(icon):
@@ -2118,12 +2323,17 @@ func _get_music_box_beat_interval() -> float:
 	return 60.0 / _get_active_music_bpm()
 
 
+func set_debug_mode(enabled: bool) -> void:
+	_debug_mode = enabled
+	_update_music_box_warning()
+
+
 func _update_music_box_warning() -> void:
-	if not _music_box_caution or not is_instance_valid(_music_box_caution) or not _music_box_caution_late or not is_instance_valid(_music_box_caution_late) or not _music_box_request_caution or not is_instance_valid(_music_box_request_caution):
+	if not _music_box_caution or not is_instance_valid(_music_box_caution) or not _music_box_caution_late or not is_instance_valid(_music_box_caution_late) or not _music_box_request_caution or not is_instance_valid(_music_box_request_caution) or not _music_box_request_caution_debug or not is_instance_valid(_music_box_request_caution_debug):
 		return
 	var camera_visible := _state == State.ACTIVE
 	var warning_active := _music_box_enabled and _music_box_charge > 0.0 and _music_box_charge <= 0.33
-	var should_show := camera_visible and _current_cam == 10 and not _music_box_late_active and warning_active
+	var should_show := _debug_mode or (camera_visible and _current_cam == 10 and not _music_box_late_active and warning_active)
 	_layout_music_box_request_caution()
 	_music_box_caution.visible = true
 	if should_show != _music_box_warning_target:
@@ -2133,7 +2343,7 @@ func _update_music_box_warning() -> void:
 		_music_box_warning_tween = create_tween()
 		_music_box_warning_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_music_box_warning_tween.tween_property(_music_box_caution, "modulate:a", 1.0 if should_show else 0.0, 0.22)
-	var should_show_late := camera_visible and (_music_box_late_active or (warning_active and _current_cam != 10))
+	var should_show_late := _debug_mode or (camera_visible and (_music_box_late_active or (warning_active and _current_cam != 10)))
 	_music_box_caution_late.visible = true
 	if should_show_late != _music_box_warning_late_target:
 		_music_box_warning_late_target = should_show_late
@@ -2142,7 +2352,7 @@ func _update_music_box_warning() -> void:
 		_music_box_warning_late_tween = create_tween()
 		_music_box_warning_late_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_music_box_warning_late_tween.tween_property(_music_box_caution_late, "modulate:a", 1.0 if should_show_late else 0.0, 0.22)
-	var request_active := camera_visible and _song_request_active and _music_box_enabled and not _music_box_late_active
+	var request_active := _debug_mode or (camera_visible and _song_request_active and _music_box_enabled and not _music_box_late_active)
 	_music_box_request_caution.visible = true
 	if request_active != _music_box_request_caution_target:
 		_music_box_request_caution_target = request_active
@@ -2151,6 +2361,8 @@ func _update_music_box_warning() -> void:
 		_music_box_request_caution_visibility_tween = create_tween()
 		_music_box_request_caution_visibility_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_music_box_request_caution_visibility_tween.tween_property(_music_box_request_caution, "self_modulate:a", 1.0 if request_active else 0.0, 0.22)
+	_music_box_request_caution_debug.visible = true
+	_music_box_request_caution_debug.self_modulate = Color(1.0, 1.0, 1.0, 1.0 if _debug_mode else 0.0)
 
 func _process_music_box_warning(delta: float) -> void:
 	_process_music_box_request_caution(delta)
@@ -2159,10 +2371,16 @@ func _process_music_box_warning(delta: float) -> void:
 
 func _process_music_box_request_caution(delta: float) -> void:
 	var camera_system_open := _state == State.OPENING or _state == State.ACTIVE or _state == State.CLOSING
-	var request_active := _song_request_active and _music_box_enabled and not _music_box_late_active and camera_system_open
+	var request_active := _debug_mode or (_song_request_active and _music_box_enabled and not _music_box_late_active and camera_system_open)
 	if not request_active:
 		_music_box_request_beat_left = 0.0
 		return
+	if _music_box_request_beat_sign < 0.0:
+		var alternate_color := _get_music_box_request_bar_color()
+		if _music_box_request_caution and is_instance_valid(_music_box_request_caution):
+			_music_box_request_caution.modulate = alternate_color
+		if _debug_mode and _music_box_request_caution_debug and is_instance_valid(_music_box_request_caution_debug):
+			_music_box_request_caution_debug.modulate = alternate_color
 	if _music_box_request_beat_left <= 0.0:
 		_music_box_request_beat_left = _get_music_box_beat_interval()
 	_music_box_request_beat_left -= delta
@@ -2171,33 +2389,45 @@ func _process_music_box_request_caution(delta: float) -> void:
 	_music_box_request_beat_left = _get_music_box_beat_interval()
 	_music_box_request_beat_sign *= -1.0
 	_play_change_request_audio()
-	if not _music_box_request_caution or not is_instance_valid(_music_box_request_caution):
+	_animate_request_caution_icon(_music_box_request_caution, false)
+	if _debug_mode:
+		_animate_request_caution_icon(_music_box_request_caution_debug, true)
+
+
+func _animate_request_caution_icon(icon: TextureRect, debug_copy: bool) -> void:
+	if not icon or not is_instance_valid(icon):
 		return
-	_music_box_request_caution.modulate = Color.WHITE if _music_box_request_beat_sign > 0.0 else Color(0.0, 1.0, 0.0, 1.0)
-	if _music_box_request_caution_tween and _music_box_request_caution_tween.is_valid():
-		_music_box_request_caution_tween.kill()
-	_music_box_request_caution.rotation = 0.0
-	_music_box_request_caution.scale = Vector2.ONE
-	_music_box_request_caution_tween = create_tween()
-	_music_box_request_caution_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_music_box_request_caution_tween.tween_property(_music_box_request_caution, "rotation", _music_box_request_beat_sign * 0.18, 0.08)
-	_music_box_request_caution_tween.parallel().tween_property(_music_box_request_caution, "scale", Vector2(1.2, 1.2), 0.08)
-	_music_box_request_caution_tween.tween_property(_music_box_request_caution, "rotation", 0.0, 0.16)
-	_music_box_request_caution_tween.parallel().tween_property(_music_box_request_caution, "scale", Vector2.ONE, 0.16)
+	var active_tween: Tween = _music_box_request_caution_debug_tween if debug_copy else _music_box_request_caution_tween
+	if active_tween and active_tween.is_valid():
+		active_tween.kill()
+	var alternate_color := _get_music_box_request_bar_color()
+	icon.modulate = Color.WHITE if _music_box_request_beat_sign > 0.0 else alternate_color
+	icon.rotation = 0.0
+	icon.scale = Vector2.ONE
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(icon, "rotation", _music_box_request_beat_sign * 0.18, 0.08)
+	tween.parallel().tween_property(icon, "scale", Vector2(1.2, 1.2), 0.08)
+	tween.tween_property(icon, "rotation", 0.0, 0.16)
+	tween.parallel().tween_property(icon, "scale", Vector2.ONE, 0.16)
+	if debug_copy:
+		_music_box_request_caution_debug_tween = tween
+	else:
+		_music_box_request_caution_tween = tween
 
 
 func _process_standard_music_box_warning(delta: float) -> void:
 	var late_icon_visible := _music_box_caution_late and _music_box_caution_late.modulate.a > 0.01
 	var normal_icon_visible := _music_box_caution and _music_box_caution.modulate.a > 0.01
 	var animated_icon := _music_box_caution_late if late_icon_visible else _music_box_caution
-	var any_caution_active := _state == State.ACTIVE and (late_icon_visible or normal_icon_visible)
+	var any_caution_active := _debug_mode or (_state == State.ACTIVE and (late_icon_visible or normal_icon_visible))
 	if not any_caution_active:
 		_music_box_danger_beat_count = 0
 		_music_box_beat_left = 0.0
 		return
 	if _music_box_beat_left <= 0.0:
 		_music_box_beat_left = _get_music_box_beat_interval()
-	if not animated_icon or animated_icon.modulate.a <= 0.0 or (not _music_box_late_active and (_music_box_charge > 0.33 or _music_box_charge <= 0.0)):
+	if not _debug_mode and (not animated_icon or animated_icon.modulate.a <= 0.0 or (not _music_box_late_active and (_music_box_charge > 0.33 or _music_box_charge <= 0.0))):
 		return
 	_music_box_beat_left -= delta
 	if _music_box_beat_left > 0.0:
@@ -2207,23 +2437,37 @@ func _process_standard_music_box_warning(delta: float) -> void:
 	_music_box_danger_beat_count += 1
 	if _music_box_danger_beat_count % 2 == 1:
 		_play_audio(_danger_audio)
-	if _music_box_caution_tween and _music_box_caution_tween.is_valid():
-		_music_box_caution_tween.kill()
-	animated_icon.rotation = 0.0
-	animated_icon.scale = Vector2.ONE
-	var caution_alpha := animated_icon.modulate.a
-	var yellow_color := Color(1.0, 0.88, 0.12, caution_alpha)
-	var red_color := Color(1.0, 0.04, 0.02, caution_alpha)
 	var danger_t := clampf(1.0 - (_music_box_charge / 0.33), 0.0, 1.0) if not _music_box_late_active else 1.0
+	var yellow_color := Color(1.0, 0.88, 0.12, 1.0)
+	var red_color := Color(1.0, 0.04, 0.02, 1.0)
 	var alt_color := yellow_color.lerp(red_color, danger_t)
-	animated_icon.modulate = Color(1.0, 1.0, 1.0, caution_alpha) if _music_box_beat_sign > 0.0 else alt_color
-	_music_box_caution_tween = create_tween()
-	_music_box_caution_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_music_box_caution_tween.tween_property(animated_icon, "rotation", _music_box_beat_sign * 0.18, 0.08)
-	var beat_scale := 1.6 if _music_box_late_active else 1.2
-	_music_box_caution_tween.parallel().tween_property(animated_icon, "scale", Vector2(beat_scale, beat_scale), 0.08)
-	_music_box_caution_tween.tween_property(animated_icon, "rotation", 0.0, 0.16)
-	_music_box_caution_tween.parallel().tween_property(animated_icon, "scale", Vector2.ONE, 0.16)
+	var caution_icons: Array[TextureRect] = []
+	if _debug_mode:
+		caution_icons.append(_music_box_caution)
+		caution_icons.append(_music_box_caution_late)
+	else:
+		caution_icons.append(animated_icon)
+	for icon: TextureRect in caution_icons:
+		if not icon or not is_instance_valid(icon) or icon.modulate.a <= 0.0:
+			continue
+		var animation_tween: Tween = _music_box_caution_late_animation_tween if icon == _music_box_caution_late else _music_box_caution_tween
+		if animation_tween and animation_tween.is_valid():
+			animation_tween.kill()
+		var caution_alpha := icon.modulate.a
+		icon.modulate = Color(1.0, 1.0, 1.0, caution_alpha) if _music_box_beat_sign > 0.0 else Color(alt_color.r, alt_color.g, alt_color.b, caution_alpha)
+		icon.rotation = 0.0
+		icon.scale = Vector2.ONE
+		var beat_scale := 1.6 if (_debug_mode and icon == _music_box_caution_late) or _music_box_late_active else 1.2
+		var tween := create_tween()
+		tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tween.tween_property(icon, "rotation", _music_box_beat_sign * 0.18, 0.08)
+		tween.parallel().tween_property(icon, "scale", Vector2(beat_scale, beat_scale), 0.08)
+		tween.tween_property(icon, "rotation", 0.0, 0.16)
+		tween.parallel().tween_property(icon, "scale", Vector2.ONE, 0.16)
+		if icon == _music_box_caution_late:
+			_music_box_caution_late_animation_tween = tween
+		else:
+			_music_box_caution_tween = tween
 
 func _update_music_box_winding_from_mouse() -> void:
 	var can_wind := (
@@ -2244,22 +2488,64 @@ func _update_music_box_winding_from_mouse() -> void:
 	)
 
 
+func _ensure_winding_audio_player() -> void:
+	_winding_audio_player = AudioStreamPlayer.new()
+	_winding_audio_player.name = "Winding"
+	_winding_audio_player.stream = WINDING_SOUND
+	_winding_audio_player.volume_db = AudioSettings.WINDING_DB
+	_winding_audio_player.pitch_scale = AudioSettings.WINDING_PITCH_SCALE
+	add_child(_winding_audio_player)
+
+
+func _process_winding_audio(delta: float) -> void:
+	if not is_music_box_winding():
+		if _winding_audio_player and _winding_audio_player.playing:
+			_winding_audio_player.stop()
+		_winding_audio_active = false
+		_winding_audio_beat_left = 0.0
+		return
+
+	if not _winding_audio_player or not is_instance_valid(_winding_audio_player):
+		return
+	if not _winding_audio_active:
+		_winding_audio_active = true
+		_winding_audio_beat_left = _get_music_box_beat_interval()
+		_winding_audio_player.play()
+		return
+
+	_winding_audio_beat_left -= delta
+	if _winding_audio_beat_left <= 0.0:
+		_winding_audio_beat_left += _get_music_box_beat_interval()
+		_winding_audio_player.play()
+
+
 func is_open() -> bool:
 	return _state != State.IDLE
 
 
 func interrupt_for_jumpscare() -> void:
 	_jumpscare_interrupted = true
+	_mobile_exit_suppressed_for_jumpscare = true
 	_state = State.IDLE
 	_switching_cam = false
+	_mobile_hide_exit_mode = false
 	_music_box_winding = false
 	_song_request_active = false
 	_change_btn_yellow = false
 	visible = false
+	_update_mobile_exit_button()
 	cam_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	_set_cursor(false)
 	if _hitbox and is_instance_valid(_hitbox):
 		_hitbox.set_in_use(false)
+
+
+func hide_mobile_exit_button() -> void:
+	_mobile_exit_suppressed_for_jumpscare = true
+	_mobile_hide_exit_mode = false
+	if _mobile_exit_button and is_instance_valid(_mobile_exit_button):
+		_mobile_exit_button.hide()
+	_update_mobile_exit_button()
 
 
 func force_close() -> void:
@@ -2293,7 +2579,7 @@ func _ensure_audio_wave_effect() -> void:
 	_audio_wave_effect.name = "AudioWaveEffect"
 	_audio_wave_effect.set_script(AUDIO_WAVE_EFFECT_SCRIPT)
 	_audio_wave_effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_audio_wave_effect.z_index = 20
+	_audio_wave_effect.z_index = 30
 	root_ctrl.add_child(_audio_wave_effect)
 	_audio_wave_effect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -2303,9 +2589,9 @@ func _layout_play_sound_button() -> void:
 		return
 	var button_size := maxf(play_audio_button_size, 1.0)
 	_configure_square_icon_button(_btn_play_sound, AUDIO_ICON_TEX, button_size)
-	_btn_play_sound.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_KEEP_SIZE)
-	_btn_play_sound.offset_left = play_audio_button_center_offset_x - button_size * 0.5
-	_btn_play_sound.offset_right = play_audio_button_center_offset_x + button_size * 0.5
+	_btn_play_sound.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_KEEP_SIZE)
+	_btn_play_sound.offset_left = play_audio_button_left
+	_btn_play_sound.offset_right = play_audio_button_left + button_size
 	_btn_play_sound.offset_bottom = -play_audio_button_bottom
 	_btn_play_sound.offset_top = -play_audio_button_bottom - button_size
 
@@ -2313,15 +2599,19 @@ func _update_play_sound_button() -> void:
 	if not _btn_play_sound or not is_instance_valid(_btn_play_sound):
 		return
 	var cooling: bool = _play_cooldown_left > 0.0
+	_btn_play_sound.visible = (_state == State.ACTIVE or _state == State.CLOSING) and not _input_blocked
+	_btn_play_sound.z_index = 40
 	_btn_play_sound.disabled = cooling or _input_blocked
 	_btn_play_sound.modulate.a = 0.6 if cooling else 1.0
+	_btn_play_sound.mouse_default_cursor_shape = Control.CURSOR_ARROW if cooling or _input_blocked else Control.CURSOR_POINTING_HAND
 
 
 func _on_play_sound_pressed() -> void:
-	if _input_blocked or _state != State.ACTIVE or _switching_cam or _play_cooldown_left > 0.0:
+	if _input_blocked or _state != State.ACTIVE or (_switching_cam and not _lost_signal_active) or _play_cooldown_left > 0.0:
 		return
+	_play_audio(_click_audio)
 	_ensure_audio_wave_effect()
-	var wave_origin := _btn_play_sound.position + Vector2(_btn_play_sound.size.x * 0.5, 0.0)
+	var wave_origin := _btn_play_sound.position + Vector2(_btn_play_sound.size.x + 8.0, _btn_play_sound.size.y * 0.5)
 	_audio_wave_effect.call("play_wave", wave_origin)
 	_play_cooldown_left = play_sound_cooldown
 	_update_play_sound_button()
@@ -2345,6 +2635,7 @@ func play_lost_signal(move_callable: Callable, duration_multiplier: float = 1.0)
 	_pending_label.text = lost_signal_translation_key
 	_pending_overlay.visible = true
 	_raise_all_buttons_above_pending()
+	_show_play_sound_during_lost_signal()
 	_play_audio(_lost_signal_audio)
 	await get_tree().process_frame
 	move_callable.call()
@@ -2353,6 +2644,7 @@ func play_lost_signal(move_callable: Callable, duration_multiplier: float = 1.0)
 	await get_tree().create_timer(lost_signal_time * transition_multiplier).timeout
 	if _pending_label and is_instance_valid(_pending_label):
 		_pending_label.text = pending_translation_key
+	_show_play_sound_during_lost_signal()
 	_play_audio(_after_lost_audio)
 	await get_tree().create_timer(pending_after_lost_time * transition_multiplier).timeout
 
@@ -2370,11 +2662,22 @@ func play_lost_signal(move_callable: Callable, duration_multiplier: float = 1.0)
 	lost_signal_finished.emit()
 
 
+func _show_play_sound_during_lost_signal() -> void:
+	if not _btn_play_sound or not is_instance_valid(_btn_play_sound):
+		return
+	if _state != State.ACTIVE or _input_blocked:
+		return
+	_btn_play_sound.visible = true
+	_btn_play_sound.z_index = 60
+	if _btn_play_sound.get_parent() == root_ctrl:
+		root_ctrl.move_child(_btn_play_sound, root_ctrl.get_child_count() - 1)
+
+
 func _start_monitor_glow() -> void:
 	var glow_player := _get_universal_player(_monitor_glow_audio)
 	if not glow_player or not is_instance_valid(glow_player):
 		return
-	glow_player.volume_db = -80.0
+	glow_player.volume_db = AudioSettings.MUTED_DB
 	if glow_player.stream != null and not glow_player.playing:
 		glow_player.play()
 
@@ -2391,7 +2694,7 @@ func _on_monitor_hover_changed(is_hovering: bool) -> void:
 		glow_player.play()
 	_monitor_glow_tween = create_tween()
 	_monitor_glow_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	var target_db := monitor_glow_max_volume_db if is_hovering else -80.0
+	var target_db := AudioSettings.MONITOR_GLOW_MAX_DB if is_hovering else AudioSettings.MUTED_DB
 	var fade_time := monitor_glow_fade_in_time if is_hovering else monitor_glow_fade_out_time
 	_monitor_glow_tween.tween_property(glow_player, "volume_db", target_db, fade_time)
 
@@ -2413,9 +2716,9 @@ func _play_monitor_open_audio() -> void:
 	if _monitor_open_fade_tween and _monitor_open_fade_tween.is_valid():
 		_monitor_open_fade_tween.kill()
 	open_player.stop()
-	open_player.volume_db = monitor_open_volume_db
+	open_player.volume_db = AudioSettings.MONITOR_OPEN_DB
 	open_player.play()
 	_monitor_open_fade_tween = create_tween()
 	_monitor_open_fade_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_monitor_open_fade_tween.tween_interval(0.6)
-	_monitor_open_fade_tween.tween_property(open_player, "volume_db", -80.0, 2.0)
+	_monitor_open_fade_tween.tween_property(open_player, "volume_db", AudioSettings.MUTED_DB, 2.0)

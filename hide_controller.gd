@@ -29,8 +29,13 @@ func _ready() -> void:
 	_player_cam = r.find_child("Camera3D", true, false) as PlayerCamera
 	_hide_view = r.find_child("HideView", true, false) as Camera3D
 	_cam_system = r.find_child("CameraSystemUI", true, false) as CameraSystemUI
+	if _cam_system and not _cam_system.mobile_hide_exit_requested.is_connected(unhide):
+		_cam_system.mobile_hide_exit_requested.connect(unhide)
 	_debug_walker = r.find_child("CharacterBody3D", true, false) as DebugWalker
 	_hiding_audio = r.find_child("Hiding", true, false) as AudioStreamPlayer3D
+	if _hiding_audio:
+		_hiding_audio.volume_db = AudioSettings.HIDING_DB
+		_hiding_audio.max_db = AudioSettings.WORLD_AUDIO_MAX_DB
 	_hiding_streams.clear()
 	for i in range(1, 8):
 		var hiding_stream := load("res://audio/hiding/hiding%d.wav" % i) as AudioStream
@@ -64,6 +69,8 @@ func _process(_delta: float) -> void:
 		return
 
 	if is_hidden:
+		if GameSettings.mobile_mode:
+			return
 		# Saklıyken herhangi bir yere tıklamak çıkış isteğidir
 		if get_signal_connection_list("unhide_clicked").is_empty():
 			unhide()
@@ -80,11 +87,12 @@ func _input(event: InputEvent) -> void:
 	if touch == null or not touch.pressed or _busy:
 		return
 	if is_hidden:
-		if get_signal_connection_list("unhide_clicked").is_empty():
-			unhide()
-		else:
-			unhide_clicked.emit()
-		get_viewport().set_input_as_handled()
+		if not GameSettings.mobile_mode:
+			if get_signal_connection_list("unhide_clicked").is_empty():
+				unhide()
+			else:
+				unhide_clicked.emit()
+			get_viewport().set_input_as_handled()
 		return
 	if _can_hide() and _is_screen_point_over_hitbox(touch.position):
 		hide_under_desk()
@@ -114,6 +122,8 @@ func hide_under_desk() -> void:
 	await _player_cam.zoom_finished
 	is_hidden = true
 	_player_cam.set_hidden_look_enabled(true)
+	if _cam_system:
+		_cam_system.set_mobile_hide_exit_mode(true)
 	_hiding = false
 	_busy = false
 	hidden_changed.emit(true)
@@ -130,6 +140,7 @@ func unhide() -> void:
 	is_hidden = false
 	_busy = false
 	if _cam_system:
+		_cam_system.set_mobile_hide_exit_mode(false)
 		_cam_system.unlock_cams("hide")
 	if _debug_mode_before_hide and _debug_walker and is_instance_valid(_debug_walker):
 		_debug_walker.set_debug_camera_active(true)

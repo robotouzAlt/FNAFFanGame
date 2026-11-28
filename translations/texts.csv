@@ -1,6 +1,10 @@
 keys,en,tr
 MENU_READY,r u ready?,hazır mısın?
 MENU_YES,yes,evet
+MENU_CUSTOM_NIGHT,custom night,özel gece
+START_NIGHT,start night,geceyi başlat
+START_NIGHT_SURE,"r u sure?","emin misin?"
+GOOD_LUCK,"good luck","bol şans"
 MENU_NO,no,hayır
 LOADING,"loading...","yükleniyor..."
 LOADING_PERCENT,%d%%,%%%d
@@ -21,9 +25,40 @@ CAM_8_NAME,"C:\Users\PC\Documents\SecureGuard\Feeds\cam10_tea_room.sdp","C:\User
 CAM_9_NAME,"C:\Users\PC\Documents\SecureGuard\Feeds\cam11_common_room.sdp","C:\Users\PC\Documents\SecureGuard\Feeds\cam11_dinlenme_odasi.sdp"
 CAM_10_NAME,"C:\Users\PC\Documents\SecureGuard\Feeds\cam06b_auditorium_enterance.sdp","C:\Users\PC\Documents\SecureGuard\Feeds\cam06b_konferans_giris.sdp"
 CAM_11_NAME,"C:\Users\PC\Documents\SecureGuard\Feeds\cam06c_auditorium.sdp","C:\Users\PC\Documents\SecureGuard\Feeds\cam06c_konferans.sdp"
-NIGHT_LABEL,night %d,gece %d
+NIGHT_LABEL,night ツ,gece ツ
+NIGHT_LABEL_MAX,"u will die","öleceksin"
 CLOCK_LABEL,%d AM,saat %d
 WIN_TEXT,6 AM,SAAT 6
 GAME_OVER,GAME OVER,OYUN BİTTİ
 LOST_SIGNAL,Lost Signal,Bağlantı Kesildi
 PLAY_AUDIO,Play Audio,Ses Çal
+QUALITY,quality,kalite
+FPS,fps,fps
+MOTION_BLUR,motion blur,hareket bulanıklığı
+SHADOWS,shadows,gölgeler
+MOBILE,touch screen,dokunmatik ekran
+CLOSE,X,X
+QUALITY_DEFAULT,default,varsayılan
+QUALITY_MEDIUM,medium,orta
+QUALITY_LOW,low,düşük
+QUALITY_POTATO,potato,tost makinesi
+QUALITY_DIPSHIT,shitty,bok gibi
+QUALITY_I_RESPECT_THAT,i respect that,saygı duyuyorum
+FPS_VSYNC_DEFAULT,"vsync","vsync"
+FPS_30,30,
+FPS_60,60,
+FPS_120,120,
+FPS_240,240,
+FPS_UNCAPPED,uncapped,sınırsız
+TERMINAL_TITLE,OUZ TERMINAL  //  SECURITY NETWORK,
+TERMINAL_RETURN_HINT,TAP OR MOVE THE POINTER TO THE LOWER EDGE TO RETURN,
+TERMINAL_REMOTE_ACCESS,REMOTE ACCESS ESTABLISHED,
+TERMINAL_CAMERAS_HINT,View the available security feeds.,
+TERMINAL_MUSICBOX_HINT,Monitor the common room mechanism.,
+TERMINAL_STATUS_HINT,Check terminal connection status.,
+TERMINAL_HELP_HINT,TYPE HELP FOR COMMANDS,
+TERMINAL_COMMANDS,"COMMANDS: CAMERAS, MUSICBOX, STATUS, CLEAR, EXIT",
+TERMINAL_CAMERAS_RESPONSE,SECURITY FEEDS ARE AVAILABLE THROUGH THE OFFICE MONITOR.,
+TERMINAL_MUSICBOX_RESPONSE,SELECT CAM 11 AND HOLD WIND MUSIC BOX TO RECHARGE.,
+TERMINAL_STATUS_RESPONSE,CONNECTION: ACTIVE  //  CAMERA NETWORK: ONLINE,
+TERMINAL_UNKNOWN_COMMAND,UNKNOWN COMMAND,

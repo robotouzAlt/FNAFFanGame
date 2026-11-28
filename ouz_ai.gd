@@ -7,15 +7,13 @@ const LURE_CAM_ROOMS: PackedStringArray = [
 	"frontauditorium", "coliseum", "westhall", "southhall", "tearoom",
 	"commonroom", "auditoriumenterance", "auditorium"
 ]
-const MUSIC_BOX_MUTED_VOLUME_DB := -80.0
 const COMMONROOM_POSE := "pose_listening_commonroom"
 const AWAKE_POSE := "pose_awake_commonroom"
 const STANDING_POSE := "pose_stand_general"
 const KICKING_POSE := "pose_kicking"
 const JUMPSCARE_POSE := "pose_jumpscare"
-const KICK_POSE_DISPLAY_SECONDS := 1.0
+
 const TRANSFORMING_BUS_NAME := "TransformingEcho"
-const TRANSFORMING_VOLUME_DB := -24.0
 const TRANSFORMING_REVERB_ROOM_SIZE := 0.5
 const TRANSFORMING_REVERB_DAMPING := 0.15
 const TRANSFORMING_REVERB_WET := 0.5
@@ -23,57 +21,22 @@ const MAP_LIGHT_COUNT := 20
 const FIRST_KNOCK_SOUND: AudioStream = preload("res://audio/knockfirst.wav")
 const JUMPSCARE_SOUND: AudioStream = preload("res://audio/jumpscare.wav")
 
-@export_group("Music Box")
-@export_range(0.1, 600.0, 0.1) var charge_drain_seconds: float = 10.0
-@export_range(1.0, 60.0, 1.0) var full_wind_seconds: float = 5.0
-@export_range(10.0, 20.0, 0.5) var commonroom_pose_wait_min: float = 5.0
-@export_range(10.0, 20.0, 0.5) var commonroom_pose_wait_max: float = 7.0
-@export_range(0.0, 60.0, 0.5) var wake_delay_min: float = 7.0
-@export_range(0.0, 60.0, 0.5) var wake_delay_max: float = 11.0
-@export_range(5.0, 120.0, 0.5) var song_change_request_interval_min: float = 5.0
-@export_range(5.0, 120.0, 0.5) var song_change_request_interval_max: float = 10.0
-@export_range(3.0, 60.0, 0.5) var song_change_request_duration: float = 15.0
-@export_group("Ambiyans")
-@export_range(-80.0, 12.0, 0.1) var office_ambience_office_db: float = -50.000
-@export_range(-80.0, 12.0, 0.1) var office_ambience_monitor_db: float = -60.000
 @export_group("Karamsar WorldEnvironment")
 @export_range(1.0, 30.0, 0.5) var dread_env_fade_seconds: float = 10.0
 @export var dread_bg_color: Color = Color(0.18, 0.28, 0.44, 1.0)
 @export var dread_fog_color: Color = Color(0.28, 0.44, 0.68, 1.0)
 @export_range(0.0, 0.1, 0.001) var dread_fog_density: float = 0.003
 @export_range(0.0, 1.0, 0.05) var dread_blue_tint: float = 0.28
-@export_group("Oda Rotası")
-@export_range(15.0, 20.0, 0.5) var room_wait_min: float = 7.0
-@export_range(15.0, 20.0, 0.5) var room_wait_max: float = 10.0
-@export_range(-80.0, 12.0, 0.5) var music_box_cam11_volume_db: float = -4.0
-@export_range(-80.0, 12.0, 0.5) var music_box_cam10_volume_db: float = -6.0
-@export_range(-80.0, 12.0, 0.5) var music_box_cam9_volume_db: float = -7.0
-@export_range(-80.0, 12.0, 0.5) var music_box_cam6b_volume_db: float = -10.0
-@export_group("OuzChanged Oda Sesleri")
-@export_range(-80.0, 12.0, 0.5) var music_changed_cam11_volume_db: float = -4.0
-@export_range(-80.0, 12.0, 0.5) var music_changed_cam10_volume_db: float = -6.0
-@export_range(-80.0, 12.0, 0.5) var music_changed_cam9_volume_db: float = -7.0
-@export_range(-80.0, 12.0, 0.5) var music_changed_cam6b_volume_db: float = -10.0
-@export_group("Oda Rotas?")
-@export_range(-80.0, 12.0, 0.5) var music_box_late_volume_db: float = -6.0
-@export_range(0.5, 15.0, 0.5) var office_approach_walk_seconds: float = 3.0
 
 @export_group("Transforming")
-@export_range(-80.0, 12.0, 0.5) var transforming_volume_db: float = TRANSFORMING_VOLUME_DB
 @export_range(0.0, 1.0, 0.05) var transforming_reverb_wet: float = TRANSFORMING_REVERB_WET
 
 @export_group("Jumpscare")
 @export_range(0.2, 5.0, 0.1) var jumpscare_time: float = 1.4
-@export_range(0.1, 3.0, 0.1) var jumpscare_shake: float = 0.9
-@export_range(5.0, 60.0, 1.0) var jumpscare_rotation_shake_deg: float = 32.0
-@export_range(-12.0, 18.0, 0.5) var jumpscare_volume_db: float = 12.0
-@export_range(0.0, 1.0, 0.05) var jumpscare_lunge: float = 0.3
-@export_range(0.0, 30.0, 0.05) var door_window_kick_delay_min: float = 1.0
-@export_range(0.0, 30.0, 0.05) var door_window_kick_delay_max: float = 3.0
-@export_range(0.0, 30.0, 0.05) var post_break_jumpscare_delay_min: float = 2.0
-@export_range(0.0, 30.0, 0.05) var post_break_jumpscare_delay_max: float = 6.0
-@export_range(0.0, 30.0, 0.05) var broken_door_wait_min: float = 1.0
-@export_range(0.0, 30.0, 0.05) var broken_door_wait_max: float = 10.0
+@export_range(0.05, 3.0, 0.01) var jumpscare_shake: float = 0.18
+@export_range(1.0, 60.0, 0.5) var jumpscare_rotation_shake_deg: float = 7.5
+@export_range(0.0, 1.0, 0.05) var jumpscare_lunge: float = 0.18
+@export_group("Attack Timing")
 @export_range(0.02, 2.0, 0.02) var camera_approach_walk_seconds: float = 0.08
 @export_range(0.02, 1.0, 0.01) var door_break_dash_seconds: float = 0.12
 
@@ -108,8 +71,9 @@ var _first_knock_sound: AudioStreamPlayer3D
 var _door_break_sound: AudioStreamPlayer3D
 var _jumpscare_sound: AudioStreamPlayer3D
 var _hide_controller: HideController
-var _office_ambience: AudioStreamPlayer3D
+var _office_ambience: AudioStreamPlayer
 var _charge := 1.0
+var _charge_drain_multiplier := 1.0
 var _awake := false
 var _sequence_running := false
 var _ended := false
@@ -118,8 +82,10 @@ var _ouz_scale := Vector3.ONE
 var _alt_song_active := false
 var _next_request_timer := 0.0
 var _request_active := false
+var _request_waiting_for_cameras := false
 var _late_start_pending := false
 var _request_left := 0.0
+var debug_mode: bool = false
 
 
 func _ready() -> void:
@@ -135,7 +101,7 @@ func _ready() -> void:
 	_camera_ui = world.find_child("CameraSystemUI", true, false) as CameraSystemUI
 	_game = world.find_child("GameManager", true, false) as GameManager
 	_audio_listener = world.find_child("OfficeAudioListener", true, false) as AudioListener3D
-	_office_ambience = world.find_child("OfficeAmbiance", true, false) as AudioStreamPlayer3D
+	_office_ambience = world.find_child("OfficeAmbiance", true, false) as AudioStreamPlayer
 	_player_camera = world.find_child("Camera3D", true, false) as PlayerCamera
 	_scare_camera = world.find_child("ScareCam", true, false) as Camera3D
 	_world_env = world.find_child("WorldEnvironment", true, false) as WorldEnvironment
@@ -158,7 +124,7 @@ func _ready() -> void:
 		if lure_player:
 			lure_player.max_distance = 100.0
 			lure_player.unit_size = 20.0
-			lure_player.volume_db = 6.0
+			lure_player.volume_db = AudioSettings.LURE_DB
 			lure_player.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
 			_lure_sounds.append(lure_player)
 	if not _camera_ui.lure_requested.is_connected(_on_lure_requested):
@@ -174,34 +140,38 @@ func _ready() -> void:
 		_audio_listener.make_current()
 	if _office_ambience:
 		_set_office_ambience_reduced(_camera_ui.is_open())
+	if not _camera_ui.opened.is_connected(_on_camera_system_opened):
 		_camera_ui.opened.connect(_on_camera_system_opened)
+	if not _camera_ui.closed.is_connected(_on_camera_system_closed):
 		_camera_ui.closed.connect(_on_camera_system_closed)
 	_teleport_to("commonroom", COMMONROOM_POSE)
 	_charge = 1.0
 	_alt_song_active = false
 	_request_active = false
+	_request_waiting_for_cameras = false
 	_request_left = 0.0
-	_schedule_next_song_request()
+	if not debug_mode:
+		_schedule_next_song_request()
 	_music_box_late.stop()
 	if _music_box_2:
 		_music_box_2.stop()
 		_music_box_2.global_position = _ouz.global_position
 		_music_box_2.max_distance = 100.0
 		_music_box_2.unit_size = 12.0
-		_music_box_2.volume_db = MUSIC_BOX_MUTED_VOLUME_DB
-		_music_box_2.max_db = 12.0
+		_music_box_2.volume_db = AudioSettings.MUTED_DB
+		_music_box_2.max_db = AudioSettings.MUSIC_BOX_MAX_DB
 		_music_box_2.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
 		if _music_box_2.stream is AudioStreamOggVorbis:
 			(_music_box_2.stream as AudioStreamOggVorbis).loop = true
 	_music_box.global_position = _ouz.global_position
 	_music_box.max_distance = 100.0
 	_music_box.unit_size = 12.0
-	_music_box.volume_db = MUSIC_BOX_MUTED_VOLUME_DB
-	_music_box.max_db = 12.0
+	_music_box.volume_db = AudioSettings.MUTED_DB
+	_music_box.max_db = AudioSettings.MUSIC_BOX_MAX_DB
 	_music_box.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
 	_music_box_late.bus = "MusicBoxLateEcho"
-	_music_box_late.volume_db = music_box_late_volume_db
-	_music_box_late.max_db = 12.0
+	_music_box_late.volume_db = AudioSettings.MUSIC_BOX_LATE_DB
+	_music_box_late.max_db = AudioSettings.MUSIC_BOX_MAX_DB
 	_music_box_late.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
 	if _first_knock_sound:
 		if _first_knock_sound.stream == null:
@@ -211,9 +181,12 @@ func _ready() -> void:
 	if _jumpscare_sound:
 		if _jumpscare_sound.stream == null:
 			_jumpscare_sound.stream = JUMPSCARE_SOUND
-		_jumpscare_sound.volume_db = jumpscare_volume_db
+		_jumpscare_sound.volume_db = AudioSettings.JUMPSCARE_DB
+		_jumpscare_sound.bus = AudioSettings.ensure_jumpscare_bus()
+		_jumpscare_sound.process_mode = Node.PROCESS_MODE_ALWAYS
 		if _jumpscare_sound is AudioStreamPlayer3D:
 			var scare_3d := _jumpscare_sound as AudioStreamPlayer3D
+			scare_3d.max_db = AudioSettings.WORLD_AUDIO_MAX_DB
 			scare_3d.max_distance = 100.0
 			scare_3d.unit_size = 20.0
 	if _music_box.stream is AudioStreamOggVorbis:
@@ -230,18 +203,25 @@ func _ready() -> void:
 
 
 func _schedule_next_song_request() -> void:
-	var lo := minf(song_change_request_interval_min, song_change_request_interval_max)
-	var hi := maxf(song_change_request_interval_min, song_change_request_interval_max)
-	_next_request_timer = randf_range(lo, hi)
+	_next_request_timer = Difficulties.random_time(Difficulties.OUZ, &"song_change_request_interval_min", &"song_change_request_interval_max")
+
+
+func set_charge_drain_multiplier(multiplier: float) -> void:
+	_charge_drain_multiplier = maxf(multiplier, 0.0)
 
 
 func _process(delta: float) -> void:
 	if _ended or _awake or _sequence_running:
 		return
+	if debug_mode:
+		_charge = 1.0
+		_camera_ui.set_music_box_charge(_charge)
+		_update_music_bus()
+		return
 	if _camera_ui.is_music_box_winding():
-		_charge = minf(_charge + delta / maxf(full_wind_seconds, 0.1), 1.0)
+		_charge = minf(_charge + delta / maxf(Difficulties.time(Difficulties.OUZ, &"full_wind_seconds"), 0.1), 1.0)
 	else:
-		_charge = maxf(_charge - delta / maxf(charge_drain_seconds, 0.1), 0.0)
+		_charge = maxf(_charge - delta / maxf(Difficulties.time(Difficulties.OUZ, &"charge_drain_seconds"), 0.1) * _charge_drain_multiplier, 0.0)
 	_camera_ui.set_music_box_charge(_charge)
 	_update_music_bus()
 	if _charge <= 0.0 and not _late_start_pending:
@@ -251,7 +231,7 @@ func _process(delta: float) -> void:
 		return
 
 	if _request_active:
-		var dur := maxf(song_change_request_duration, 0.1)
+		var dur := maxf(Difficulties.time(Difficulties.OUZ, &"song_change_request_duration"), 0.1)
 		_request_left = maxf(_request_left - delta, 0.0)
 		var progress := _request_left / dur
 		_camera_ui.set_song_request_state(true, progress)
@@ -264,11 +244,26 @@ func _process(delta: float) -> void:
 				_force_classic_late_from_music_box()
 				return
 	else:
-		_next_request_timer = maxf(_next_request_timer - delta, 0.0)
-		if _next_request_timer <= 0.0:
-			_request_active = true
-			_request_left = maxf(song_change_request_duration, 0.1)
-			_camera_ui.set_song_request_state(true, 1.0)
+		if _request_waiting_for_cameras:
+			if _camera_ui.is_camera_feed_active():
+				_start_song_change_request()
+		else:
+			_next_request_timer = maxf(_next_request_timer - delta, 0.0)
+			if _next_request_timer <= 0.0:
+				if _camera_ui.is_camera_feed_active():
+					_start_song_change_request()
+				else:
+					_request_waiting_for_cameras = true
+
+
+func _start_song_change_request() -> void:
+	if _ended or _awake or _sequence_running or _late_start_pending or debug_mode or _request_active:
+		_request_waiting_for_cameras = false
+		return
+	_request_waiting_for_cameras = false
+	_request_active = true
+	_request_left = maxf(Difficulties.time(Difficulties.OUZ, &"song_change_request_duration"), 0.1)
+	_camera_ui.set_song_request_state(true, 1.0)
 
 
 func _on_music_change_requested() -> void:
@@ -288,7 +283,7 @@ func _on_music_change_requested() -> void:
 
 	if not _late_start_pending:
 		_late_start_pending = true
-		await get_tree().create_timer(randf_range(3.0, 7.0)).timeout
+		await get_tree().create_timer(Difficulties.random_time(Difficulties.OUZ, &"music_change_late_delay_min", &"music_change_late_delay_max")).timeout
 		if _ended or _awake or _sequence_running:
 			_late_start_pending = false
 			return
@@ -318,6 +313,7 @@ func _get_active_song_player() -> AudioStreamPlayer3D:
 
 func _force_classic_late_from_music_box() -> void:
 	_request_active = false
+	_request_waiting_for_cameras = false
 	_request_left = 0.0
 	_alt_song_active = false
 	_camera_ui.set_music_box_alt_active(false)
@@ -335,6 +331,7 @@ func _begin_wake_sequence() -> void:
 	_sequence_running = true
 	_awake = true
 	_request_active = false
+	_request_waiting_for_cameras = false
 	_request_left = 0.0
 	_start_dread_environment_fade()
 	_camera_ui.set_song_request_state(false, 0.0)
@@ -349,8 +346,10 @@ func _begin_wake_sequence() -> void:
 	if _music_box_late.stream is AudioStreamOggVorbis:
 		(_music_box_late.stream as AudioStreamOggVorbis).loop = true
 	_music_box_late.play()
+	if _player_camera:
+		_player_camera.shake(0.035, 2.0)
 	_update_music_bus()
-	var wake_delay := randf_range(minf(wake_delay_min, wake_delay_max), maxf(wake_delay_min, wake_delay_max))
+	var wake_delay := Difficulties.random_time(Difficulties.OUZ, &"wake_delay_min", &"wake_delay_max")
 	if wake_delay > 0.0:
 		await get_tree().create_timer(wake_delay).timeout
 	if _ended:
@@ -376,34 +375,32 @@ func _begin_wake_sequence() -> void:
 	if _ended:
 		return
 
-	await _walk_to_room_with_signal("preSouthhall", STANDING_POSE, office_approach_walk_seconds)
+	var has_door_window_access := await _wait_for_door_window_access()
+	if not has_door_window_access:
+		return
+
+	await _walk_to_room_with_signal("preSouthhall", STANDING_POSE, Difficulties.time(Difficulties.OUZ, &"office_approach_walk_seconds"))
 	if _ended:
 		return
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(Difficulties.time(Difficulties.OUZ, &"door_window_pre_wait_seconds")).timeout
 	if _ended:
 		return
-	await _walk_to_room("preDoorWindow", STANDING_POSE, office_approach_walk_seconds)
+	await _walk_to_room("preDoorWindow", STANDING_POSE, Difficulties.time(Difficulties.OUZ, &"office_approach_walk_seconds"))
 	if _ended:
 		return
-	await _walk_to_room("DoorWindow", STANDING_POSE, office_approach_walk_seconds)
+	await _walk_to_room("DoorWindow", STANDING_POSE, Difficulties.time(Difficulties.OUZ, &"office_approach_walk_seconds"))
 	if _ended:
 		return
 
 	var door_already_broken := _door != null and is_instance_valid(_door) and _door.is_broken
 	if door_already_broken:
-		var broken_wait := randf_range(
-			minf(broken_door_wait_min, broken_door_wait_max),
-			maxf(broken_door_wait_min, broken_door_wait_max)
-		)
+		var broken_wait := Difficulties.random_time(Difficulties.OUZ, &"broken_door_wait_min", &"broken_door_wait_max")
 		if broken_wait > 0.0:
 			await get_tree().create_timer(broken_wait).timeout
 		if _ended:
 			return
 	else:
-		var kick_delay := randf_range(
-			minf(door_window_kick_delay_min, door_window_kick_delay_max),
-			maxf(door_window_kick_delay_min, door_window_kick_delay_max)
-		)
+		var kick_delay := Difficulties.random_time(Difficulties.OUZ, &"door_window_kick_delay_min", &"door_window_kick_delay_max")
 		if kick_delay > 0.0:
 			await get_tree().create_timer(kick_delay).timeout
 		if _ended:
@@ -414,15 +411,12 @@ func _begin_wake_sequence() -> void:
 		_break_door_stage3()
 		_shake_camera_on_door_kick(0.7, 0.6)
 
-		await get_tree().create_timer(KICK_POSE_DISPLAY_SECONDS).timeout
+		await get_tree().create_timer(Difficulties.time(Difficulties.OUZ, &"kick_pose_display_seconds")).timeout
 		if _ended:
 			return
 
 		_set_pose(STANDING_POSE)
-		var stand_wait := randf_range(
-			minf(post_break_jumpscare_delay_min, post_break_jumpscare_delay_max),
-			maxf(post_break_jumpscare_delay_min, post_break_jumpscare_delay_max)
-		)
+		var stand_wait := Difficulties.random_time(Difficulties.OUZ, &"post_break_jumpscare_delay_min", &"post_break_jumpscare_delay_max")
 		if stand_wait > 0.0:
 			await get_tree().create_timer(stand_wait).timeout
 		if _ended:
@@ -591,10 +585,12 @@ func _break_door_stage3() -> void:
 	if _door_break_sound and is_instance_valid(_door_break_sound):
 		_door_break_sound.stop()
 		if _door_break_sound.stream != null:
+			_door_break_sound.pitch_scale = randf_range(0.8, 1.2)
 			_door_break_sound.play()
 	if _first_knock_sound and is_instance_valid(_first_knock_sound):
 		_first_knock_sound.stop()
 		if _first_knock_sound.stream != null:
+			_first_knock_sound.pitch_scale = randf_range(0.8, 1.2)
 			_first_knock_sound.play()
 	if not _door or not is_instance_valid(_door):
 		return
@@ -617,11 +613,29 @@ func _break_door_stage3() -> void:
 
 
 func _wait_in_room() -> void:
-	await get_tree().create_timer(randf_range(room_wait_min, room_wait_max)).timeout
+	await get_tree().create_timer(Difficulties.random_time(Difficulties.OUZ, &"room_wait_min", &"room_wait_max")).timeout
+
+
+func _wait_for_door_window_access() -> bool:
+	var coordinator := get_parent()
+	if not is_instance_valid(coordinator) or not coordinator.has_method("try_reserve_door_window"):
+		push_error("OuzAI: DoorWindow rezervasyon kontrolcüsü bulunamadı.")
+		return false
+	while not _ended:
+		if coordinator.call("try_reserve_door_window", self) == true:
+			return true
+		await _wait_in_room()
+	return false
+
+
+func _release_door_window() -> void:
+	var coordinator := get_parent()
+	if is_instance_valid(coordinator) and coordinator.has_method("release_door_window"):
+		coordinator.call("release_door_window", self)
 
 
 func _wait_commonroom_pose_change() -> void:
-	await get_tree().create_timer(randf_range(commonroom_pose_wait_min, commonroom_pose_wait_max)).timeout
+	await get_tree().create_timer(Difficulties.random_time(Difficulties.OUZ, &"commonroom_pose_wait_min", &"commonroom_pose_wait_max")).timeout
 
 
 func _play_pose_with_signal(pose_name: String, sync_transforming: bool = false) -> void:
@@ -798,12 +812,13 @@ func _configure_transforming_sound() -> void:
 		return
 	if _transforming_sound is AudioStreamPlayer:
 		var p2d := _transforming_sound as AudioStreamPlayer
-		p2d.volume_db = transforming_volume_db
+		p2d.volume_db = AudioSettings.TRANSFORMING_DB
 		if AudioServer.get_bus_index(TRANSFORMING_BUS_NAME) >= 0:
 			p2d.bus = TRANSFORMING_BUS_NAME
 	elif _transforming_sound is AudioStreamPlayer3D:
 		var p3d := _transforming_sound as AudioStreamPlayer3D
-		p3d.volume_db = transforming_volume_db
+		p3d.volume_db = AudioSettings.TRANSFORMING_DB
+		p3d.max_db = AudioSettings.WORLD_AUDIO_MAX_DB
 		p3d.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
 		p3d.max_distance = 100.0
 		p3d.unit_size = 20.0
@@ -886,31 +901,33 @@ func _start_jumpscare(door_was_already_broken: bool = false) -> void:
 		_room = jumpscare_spot_name
 		_set_pose(JUMPSCARE_POSE)
 	_ended = true
+	_release_door_window()
 	_reset_dread_environment_and_lights()
 	var was_watching_cameras := _camera_ui != null and _camera_ui.is_open()
 	if _camera_ui:
+		_camera_ui.hide_mobile_exit_button()
+		_camera_ui.set_mobile_hide_exit_mode(false)
 		_camera_ui.lock_cams("jumpscare")
 		if was_watching_cameras:
 			_camera_ui.interrupt_for_jumpscare()
 	if _player_camera:
-		_jumpscare_camera = _player_camera
-		var scare_cam_is_usable := (
-			_scare_camera != null
-			and is_instance_valid(_scare_camera)
-			and _scare_camera.get_viewport() == _player_camera.get_viewport()
-		)
+		var scare_cam_is_usable := false
+		if not player_hidden:
+			_scare_camera = _resolve_scare_camera()
+			scare_cam_is_usable = _scare_camera != null and is_instance_valid(_scare_camera)
 		if scare_cam_is_usable:
-			if not was_watching_cameras and not player_hidden and not door_was_already_broken:
+			if not was_watching_cameras and not door_was_already_broken:
 				_player_camera.snap_to_base()
 			_jumpscare_camera = _scare_camera
-			_jumpscare_camera.make_current()
+			_force_jumpscare_camera_current()
 		else:
-			_player_camera.make_current()
+			_jumpscare_camera = _player_camera
+			_force_jumpscare_camera_current()
 		_player_camera.set_frozen(true)
 		var scare_controller := _jumpscare_camera as PlayerCamera
 		if scare_controller:
 			scare_controller.set_frozen(true)
-			scare_controller.shake(jumpscare_shake, jumpscare_time)
+			scare_controller.shake(jumpscare_shake * 0.5, jumpscare_time)
 	_set_pose(JUMPSCARE_POSE)
 	if _jumpscare_sound and is_instance_valid(_jumpscare_sound):
 		if _jumpscare_sound is AudioStreamPlayer3D:
@@ -929,6 +946,36 @@ func _start_jumpscare(door_was_already_broken: bool = false) -> void:
 		get_tree().reload_current_scene()
 
 
+func _resolve_scare_camera() -> Camera3D:
+	if _player_camera == null or not is_instance_valid(_player_camera):
+		return null
+	if _scare_camera != null and is_instance_valid(_scare_camera):
+		if _scare_camera.get_viewport() == _player_camera.get_viewport():
+			return _scare_camera
+	var scene_root := get_tree().current_scene if get_tree() else null
+	if scene_root:
+		for candidate: Node in scene_root.find_children("ScareCam", "Camera3D", true, false):
+			var camera := candidate as Camera3D
+			if camera and camera.get_viewport() == _player_camera.get_viewport():
+				return camera
+	return null
+
+
+func _force_jumpscare_camera_current() -> void:
+	if _jumpscare_camera == null or not is_instance_valid(_jumpscare_camera):
+		return
+	var camera_viewport := _jumpscare_camera.get_viewport()
+	if camera_viewport:
+		for candidate: Node in camera_viewport.find_children("*", "Camera3D", true, false):
+			var other_camera := candidate as Camera3D
+			if other_camera and other_camera != _jumpscare_camera and other_camera.current:
+				other_camera.current = false
+	_jumpscare_camera.current = true
+	_jumpscare_camera.make_current()
+	if camera_viewport and camera_viewport.get_camera_3d() != _jumpscare_camera:
+		_jumpscare_camera.call_deferred("make_current")
+
+
 func _run_jumpscare_shake() -> void:
 	var start_position := _ouz.global_position
 	var target_position := _jumpscare_camera.global_position
@@ -937,21 +984,33 @@ func _run_jumpscare_shake() -> void:
 	var base_h_offset := _jumpscare_camera.h_offset
 	var base_v_offset := _jumpscare_camera.v_offset
 	var elapsed := 0.0
+	var pos_shake := jumpscare_shake * 0.25
+	var offset_shake := jumpscare_shake * 0.35
 	while elapsed < jumpscare_time:
 		await get_tree().process_frame
+		_force_jumpscare_camera_current()
 		elapsed += get_process_delta_time()
 		var progress := clampf(elapsed / jumpscare_time, 0.0, 1.0)
 		_ouz.global_position = start_position.lerp(target_position, jumpscare_lunge * progress)
 		_jumpscare_camera.position = base_camera_position + Vector3(
 			randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), 0.0
-		) * jumpscare_shake
+		) * pos_shake
 		var angle := deg_to_rad(jumpscare_rotation_shake_deg)
 		_jumpscare_camera.rotation = base_camera_rotation + Vector3(
-			randf_range(-angle, angle), randf_range(-angle, angle), randf_range(-angle, angle)
+			randf_range(-angle, angle), randf_range(-angle, angle), randf_range(-angle * 0.75, angle * 0.75)
 		)
 		if _jumpscare_camera != _player_camera:
-			_jumpscare_camera.h_offset = base_h_offset + randf_range(-jumpscare_shake, jumpscare_shake)
-			_jumpscare_camera.v_offset = base_v_offset + randf_range(-jumpscare_shake, jumpscare_shake)
+			_jumpscare_camera.h_offset = base_h_offset + randf_range(-offset_shake, offset_shake)
+			_jumpscare_camera.v_offset = base_v_offset + randf_range(-offset_shake, offset_shake)
+
+	_jumpscare_camera.position = base_camera_position
+	_jumpscare_camera.rotation = base_camera_rotation
+	var scare_controller := _jumpscare_camera as PlayerCamera
+	if scare_controller:
+		scare_controller.reset_shake()
+	else:
+		_jumpscare_camera.h_offset = base_h_offset
+		_jumpscare_camera.v_offset = base_v_offset
 
 
 func _update_music_bus() -> void:
@@ -960,27 +1019,27 @@ func _update_music_bus() -> void:
 	var is_echo_camera := camera_index == MUSIC_BOX_ECHO_CAMERA
 	var is_remote_camera := MUSIC_BOX_REMOTE_CAMERAS.has(camera_index)
 	var target_bus := "MusicBoxEcho" if is_echo_camera else "MusicBoxMuffledEcho"
-	var target_db := MUSIC_BOX_MUTED_VOLUME_DB
+	var target_db := AudioSettings.MUTED_DB
 	if feed_active and is_echo_camera:
-		target_db = music_box_cam11_volume_db
+		target_db = AudioSettings.MUSIC_BOX_CAM11_DB
 	elif feed_active and is_remote_camera:
 		match camera_index:
 			9:
-				target_db = music_box_cam10_volume_db
+				target_db = AudioSettings.MUSIC_BOX_CAM10_DB
 			8:
-				target_db = music_box_cam9_volume_db
+				target_db = AudioSettings.MUSIC_BOX_CAM9_DB
 			11:
-				target_db = music_box_cam6b_volume_db
+				target_db = AudioSettings.MUSIC_BOX_CAM6B_DB
 	if feed_active and _alt_song_active:
 		match camera_index:
 			10:
-				target_db = music_changed_cam11_volume_db
+				target_db = AudioSettings.MUSIC_CHANGED_CAM11_DB
 			9:
-				target_db = music_changed_cam10_volume_db
+				target_db = AudioSettings.MUSIC_CHANGED_CAM10_DB
 			8:
-				target_db = music_changed_cam9_volume_db
+				target_db = AudioSettings.MUSIC_CHANGED_CAM9_DB
 			11:
-				target_db = music_changed_cam6b_volume_db
+				target_db = AudioSettings.MUSIC_CHANGED_CAM6B_DB
 	var active_player := _get_active_song_player()
 	var other_player := _music_box_2 if active_player == _music_box else _music_box
 	if active_player and is_instance_valid(active_player):
@@ -988,7 +1047,7 @@ func _update_music_bus() -> void:
 		active_player.volume_db = target_db
 	if other_player and is_instance_valid(other_player):
 		other_player.bus = target_bus
-		other_player.volume_db = MUSIC_BOX_MUTED_VOLUME_DB
+		other_player.volume_db = AudioSettings.MUTED_DB
 
 
 func _on_camera_system_opened() -> void:
@@ -1002,7 +1061,7 @@ func _on_camera_system_closed() -> void:
 func _set_office_ambience_reduced(reduced: bool) -> void:
 	if not _office_ambience or not is_instance_valid(_office_ambience):
 		return
-	_office_ambience.volume_db = office_ambience_monitor_db if reduced else office_ambience_office_db
+	_office_ambience.volume_db = AudioSettings.OFFICE_AMBIENCE_MONITOR_DB if reduced else AudioSettings.OFFICE_AMBIENCE_DB
 
 
 func _ensure_music_buses() -> void:
@@ -1046,6 +1105,7 @@ func _ensure_bus(bus_name: String) -> int:
 func _on_game_finished() -> void:
 	_ended = true
 	_request_active = false
+	_request_waiting_for_cameras = false
 	_reset_dread_environment_and_lights()
 	_camera_ui.set_song_request_state(false, 0.0)
 	_camera_ui.set_music_box_late_active(false)
